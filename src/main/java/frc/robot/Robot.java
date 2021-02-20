@@ -5,9 +5,7 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.PWMVictorSPX;
-import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -22,9 +20,12 @@ public class Robot extends TimedRobot
     private static final String CUSTOM_AUTO = "My Auto";
     private String autoSelected;
     private final SendableChooser<String> chooser = new SendableChooser<>();
+    private final Timer timer = new Timer();
 
     private final DifferentialDrive robotDrive = new DifferentialDrive(new PWMVictorSPX(0), new PWMVictorSPX(1));
     private final Joystick stick = new Joystick(0);
+    Encoder encoderL = new Encoder(0, 1, false, Encoder.EncodingType.k4X);
+    Encoder encoderR = new Encoder(2, 3, false, Encoder.EncodingType.k4X);
 
     /**
      * このメソッドはロボットが最初に起動されたときに実行され、初期化コードを書くことができます。
@@ -62,12 +63,25 @@ public class Robot extends TimedRobot
         autoSelected = chooser.getSelected();
         // autoSelected = SmartDashboard.getString("Auto Selector", defaultAuto);
         System.out.println("Auto selected: " + autoSelected);
+        timer.reset();
+        timer.start();
+        encoderL.reset();
+        encoderR.reset();
     }
 
     /** このメソッドは自律走行中に定期的に呼び出されます。 */
     @Override
     public void autonomousPeriodic()
     {
+        // 前進プログラムテスト
+        if (timer.get() < 1.0){
+            robotDrive.arcadeDrive(0.5, 0, true);
+            System.out.println(encoderL.get() + ", " + encoderR.get());
+
+        } else {
+            robotDrive.stopMotor();
+        }
+
         switch (autoSelected)
         {
             case CUSTOM_AUTO:
@@ -82,7 +96,10 @@ public class Robot extends TimedRobot
 
     /** この関数は操作制御が有効になっているときに一度だけ呼び出されます。 */
     @Override
-    public void teleopInit() {}
+    public void teleopInit() {
+        encoderL.reset();
+        encoderR.reset();
+    }
 
     /** このメソッドは操作制御中に定期的に呼び出されます。 */
     @Override
@@ -98,6 +115,8 @@ public class Robot extends TimedRobot
         if (Math.abs(stickLR) >= 0.5) {
             stickLR = 0.5 * Math.signum(stickLR);
         }
+
+        System.out.println(encoderL.get() + ", " + encoderR.get());
 
         //足回りモーター
         double xSpeed = -0.65 * processQuadraticStick(stickLY);
