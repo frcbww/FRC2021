@@ -5,7 +5,10 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.PWMVictorSPX;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -19,6 +22,9 @@ public class Robot extends TimedRobot
     private static final String CUSTOM_AUTO = "My Auto";
     private String autoSelected;
     private final SendableChooser<String> chooser = new SendableChooser<>();
+
+    private final DifferentialDrive robotDrive = new DifferentialDrive(new PWMVictorSPX(0), new PWMVictorSPX(1));
+    private final Joystick stick = new Joystick(0);
 
     /**
      * このメソッドはロボットが最初に起動されたときに実行され、初期化コードを書くことができます。
@@ -74,13 +80,30 @@ public class Robot extends TimedRobot
         }
     }
 
-    /** この関数は teleop が有効になっているときに一度だけ呼び出されます。 */
+    /** この関数は操作制御が有効になっているときに一度だけ呼び出されます。 */
     @Override
     public void teleopInit() {}
 
-    /** このメソッドはオペレータ制御中に定期的に呼び出されます。 */
+    /** このメソッドは操作制御中に定期的に呼び出されます。 */
     @Override
-    public void teleopPeriodic() {}
+    public void teleopPeriodic() {
+        //コントローラーデータ
+        double stickLX = stick.getX();
+        double stickLY = stick.getY();
+        double stickRX = stick.getRawAxis(4);
+
+        double stickLR = 0.3 * stickLX + 0.4 * stickRX;
+
+        //スピード制限
+        if (Math.abs(stickLR) >= 0.5) {
+            stickLR = 0.5 * Math.signum(stickLR);
+        }
+
+        //足回りモーター
+        double xSpeed = -0.65 * processQuadraticStick(stickLY);
+        double zRotation = processQuadraticStick(stickLR);
+        robotDrive.arcadeDrive(xSpeed, zRotation, true);
+    }
 
     /** この関数はロボットが無効化されたときに一度だけ呼び出されます。 */
     @Override
@@ -97,4 +120,8 @@ public class Robot extends TimedRobot
     /** このメソッドはテストモード中に定期的に呼び出されます。 */
     @Override
     public void testPeriodic() {}
+
+    private double processQuadraticStick(double value) {
+        return 2 / (1 + Math.exp(-3 * value)) - 1;
+    }
 }
