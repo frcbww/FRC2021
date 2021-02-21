@@ -109,7 +109,7 @@ public class Robot extends TimedRobot
         double stickLY = stick.getY();
         double stickRX = stick.getRawAxis(4);
 
-        double stickLR = 0.3 * stickLX + 0.4 * stickRX;
+        double stickLR = 0.3 * stickLX + 0.35 * stickRX;
 
         //スピード制限
         if (Math.abs(stickLR) >= 0.5) {
