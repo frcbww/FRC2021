@@ -75,9 +75,8 @@ public class Robot extends TimedRobot
     {
         // 前進プログラムテスト
         if (timer.get() < 1.0){
-            robotDrive.arcadeDrive(0.5, 0, true);
-            System.out.println(encoderL.get() + ", " + encoderR.get());
-
+            double zRotation = convertStraightEncoder(encoderL.get(), encoderR.get());
+            robotDrive.arcadeDrive(0.5, zRotation, true);
         } else {
             robotDrive.stopMotor();
         }
@@ -119,8 +118,8 @@ public class Robot extends TimedRobot
         System.out.println(encoderL.get() + ", " + encoderR.get());
 
         //足回りモーター
-        double xSpeed = -0.65 * processQuadraticStick(stickLY);
-        double zRotation = processQuadraticStick(stickLR);
+        double xSpeed = -0.65 * convertStickSigmoid(stickLY);
+        double zRotation = convertStickSigmoid(stickLR);
         robotDrive.arcadeDrive(xSpeed, zRotation, true);
     }
 
@@ -140,7 +139,15 @@ public class Robot extends TimedRobot
     @Override
     public void testPeriodic() {}
 
-    private double processQuadraticStick(double value) {
+    // スティックの値をシグモイド関数で変換
+    private double convertStickSigmoid(double value) {
         return 2 / (1 + Math.exp(-3 * value)) - 1;
+    }
+
+    // エンコーダーを使用した直進
+    private double convertStraightEncoder(double leftEncoder, double rightEncoder) {
+        double kP = 0.004;
+        double diff = rightEncoder + leftEncoder;
+        return kP * diff;
     }
 }
