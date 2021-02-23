@@ -17,7 +17,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 public class Robot extends TimedRobot
 {
     private static final String DEFAULT_AUTO = "Default";
-    private static final String CUSTOM_AUTO = "My Auto";
+    private static final String BARREL_RACING_AUTO = "Barrel Racing Path";
+    private static final String SLALOM_AUTO = "Slalom Path";
+    private static final String BOUNCE_AUTO = "Bounce Path";
     private String autoSelected;
     private final SendableChooser<String> chooser = new SendableChooser<>();
     private final Timer timer = new Timer();
@@ -34,7 +36,9 @@ public class Robot extends TimedRobot
     public void robotInit()
     {
         chooser.setDefaultOption("Default Auto", DEFAULT_AUTO);
-        chooser.addOption("My Auto", CUSTOM_AUTO);
+        chooser.addOption("Barrel Racing Path", BARREL_RACING_AUTO);
+        chooser.addOption("Slalom Path", SLALOM_AUTO);
+        chooser.addOption("Bounce Path", BOUNCE_AUTO);
         SmartDashboard.putData("Auto choices", chooser);
     }
 
@@ -73,22 +77,28 @@ public class Robot extends TimedRobot
     @Override
     public void autonomousPeriodic()
     {
-        // 前進プログラムテスト
-        if (timer.get() < 1.0){
-            double zRotation = convertStraightEncoder(encoderL.get(), encoderR.get());
-            robotDrive.arcadeDrive(0.5, zRotation, true);
-        } else {
-            robotDrive.stopMotor();
-        }
-
         switch (autoSelected)
         {
-            case CUSTOM_AUTO:
-                // Put custom auto code here
+            // バレルレーシング経路
+            case BARREL_RACING_AUTO:
                 break;
+
+            // スラローム経路
+            case SLALOM_AUTO:
+                break;
+
+            // バウンド経路
+            case BOUNCE_AUTO:
+                break;
+
+            // 前進プログラムテスト
             case DEFAULT_AUTO:
-            default:
-                // Put default auto code here
+                if (timer.get() < 1.0){
+                    double zRotation = convertStraightEncoder(encoderL.get(), encoderR.get());
+                    robotDrive.arcadeDrive(0.5, zRotation, true);
+                } else {
+                    robotDrive.stopMotor();
+                }
                 break;
         }
     }

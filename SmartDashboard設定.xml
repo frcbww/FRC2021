@@ -1,0 +1,19 @@
+<xml version="1.0">
+<dashboard>
+	<widget field="Auto choices" type="String Chooser" class="edu.wpi.first.smartdashboard.gui.elements.Chooser">
+		<location x="533" y="41"/>
+	</widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.CameraServerViewer">
+		<location x="1" y="1"/>
+		<width>523</width>
+		<height>392</height>
+		<property name="Degrees Rotation" value="180"/>
+		<property name="Camera Choice" value=""/>
+	</static-widget>
+	<widget field="Auto Selector" type="String" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="534" y="8"/>
+	</widget>
+</dashboard>
+<live-window>
+</live-window>
+</xml>
