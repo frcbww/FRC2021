@@ -30,6 +30,8 @@ public class Robot extends TimedRobot {
     Encoder encoderR = new Encoder(2, 3, false, Encoder.EncodingType.k4X);
     private final ADXRS450_Gyro gyro = new ADXRS450_Gyro();
 
+    private final PWMVictorSPX collect = new PWMVictorSPX(2);
+
     /**
      * このメソッドはロボットが最初に起動されたときに実行され、初期化コードを書くことができます。
      */
@@ -127,8 +129,18 @@ public class Robot extends TimedRobot {
             stickLR = 0.5 * Math.signum(stickLR);
         }
 
-//        System.out.println(encoderL.get() + ", " + encoderR.get());
-        System.out.println(gyro.getAngle());
+        // 押下ボタンのテスト
+//        for (int i = 0; i < 9; i++) if (stick.getRawButton(i)) System.out.println(i);
+
+        if (stick.getRawButton(5)) {
+            collect.set(0.7);
+        } else {
+            collect.set(0);
+        }
+
+        System.out.println(encoderL.getDistance() + ", " + encoderR.getDistance());
+//        System.out.println(gyro.getAngle());
+
 
         //足回りモーター
         double xSpeed = -0.65 * convertStickSigmoid(stickLY);
