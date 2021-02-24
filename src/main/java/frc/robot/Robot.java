@@ -25,12 +25,11 @@ public class Robot extends TimedRobot {
     private final PID pid = new PID();
 
     private final DifferentialDrive robotDrive = new DifferentialDrive(new PWMVictorSPX(0), new PWMVictorSPX(1));
+    private final PWMVictorSPX collect = new PWMVictorSPX(2);
     private final Joystick stick = new Joystick(0);
     Encoder encoderL = new Encoder(0, 1, false, Encoder.EncodingType.k4X);
     Encoder encoderR = new Encoder(2, 3, false, Encoder.EncodingType.k4X);
     private final ADXRS450_Gyro gyro = new ADXRS450_Gyro();
-
-    private final PWMVictorSPX collect = new PWMVictorSPX(2);
 
     /**
      * このメソッドはロボットが最初に起動されたときに実行され、初期化コードを書くことができます。
@@ -42,7 +41,7 @@ public class Robot extends TimedRobot {
         chooser.addOption("Slalom Path", SLALOM_AUTO);
         chooser.addOption("Bounce Path", BOUNCE_AUTO);
         SmartDashboard.putData("Auto choices", chooser);
-        gyro.calibrate();
+//        gyro.calibrate();
     }
 
     /**
@@ -93,10 +92,11 @@ public class Robot extends TimedRobot {
 
             // 前進プログラムテスト
             case DEFAULT_AUTO:
-                if (timer.get() < 3.0) {
+                if (timer.get() < 2.0) {
 //                    double zRotation = convertStraightEncoder(encoderL.get(), encoderR.get());
-                    double zRotation = convertAngleGyro(0);
-                    robotDrive.arcadeDrive(0.5, zRotation, true);
+                    double zRotation = convertStraightGyro(0);
+//                    robotDrive.arcadeDrive(0.6, 0.4, true);
+                    robotDrive.arcadeDrive(0.6, zRotation, true);
                 } else {
                     robotDrive.stopMotor();
                 }
@@ -122,7 +122,7 @@ public class Robot extends TimedRobot {
         double stickLY = stick.getY();
         double stickRX = stick.getRawAxis(4);
 
-        double stickLR = 0.3 * stickLX + 0.35 * stickRX;
+        double stickLR = 0.35 * stickLX + 0.4 * stickRX;
 
         //スピード制限
         if (Math.abs(stickLR) >= 0.5) {
@@ -132,18 +132,17 @@ public class Robot extends TimedRobot {
         // 押下ボタンのテスト
 //        for (int i = 0; i < 9; i++) if (stick.getRawButton(i)) System.out.println(i);
 
+        // 回収機構
         if (stick.getRawButton(5)) {
             collect.set(0.7);
         } else {
             collect.set(0);
         }
 
-        System.out.println(encoderL.getDistance() + ", " + encoderR.getDistance());
-//        System.out.println(gyro.getAngle());
-
+//        System.out.println(encoderL.getDistance() + ", " + encoderR.getDistance());
 
         //足回りモーター
-        double xSpeed = -0.65 * convertStickSigmoid(stickLY);
+        double xSpeed = -0.7 * convertStickSigmoid(stickLY);
         double zRotation = convertStickSigmoid(stickLR);
         robotDrive.arcadeDrive(xSpeed, zRotation, true);
     }
@@ -185,8 +184,8 @@ public class Robot extends TimedRobot {
     }
 
     // スティックの値をシグモイド関数で変換
-    private double convertStickSigmoid(double value) {
-        return 2 / (1 + Math.exp(-3 * value)) - 1;
+    private double convertStickSigmoid(double zRotation) {
+        return 2 / (1 + Math.exp(-3 * zRotation)) - 1;
     }
 
     // エンコーダーを使用した直進
@@ -197,7 +196,7 @@ public class Robot extends TimedRobot {
     }
 
     // ジャイロを使用した直進
-    private double convertAngleGyro(double targetAngle) {
+    private double convertStraightGyro(double targetAngle) {
         pid.setGain(0.05, 0.00002, 0.3);
         pid.setTarget(targetAngle);
 
