@@ -14,4 +14,8 @@ public class Init {
             return false;
         }
     }
+
+    public static void resetInit(String key) {
+        list.remove(key);
+    }
 }

@@ -17,7 +17,7 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
     public ADXRS450_Gyro gyro;
     public SpeedController mL, mR;
 
-    private int smoothStraightState = 0;
+    public int smoothStraightState = 0;
 
     public Drive(SpeedController sp1, SpeedController sp2) {
         super(sp1, sp2);
@@ -55,7 +55,8 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
     }
 
     public int gyroStraight(double power, double stop, double tar, boolean sud) {
-        if (!Init.isInit("gyroStraight")) {
+        final String KEY = "gyroStraight";
+        if (!Init.isInit(KEY)) {
             encoderL.reset();
             encoderR.reset();
         }
@@ -63,15 +64,18 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
         boolean pos_or_neg = power > 0 && stop > 0;
         int i = pos_or_neg ? 1 : -1;
 
-        if (sud) {
-            suddenly_stop(pos_or_neg);
-            return 0;
-        } else if (Math.abs((encoderR.get() - encoderL.get())) < Math.abs(stop) * 2) {
+
+        if (Math.abs((encoderR.get() - encoderL.get())) < Math.abs(stop) * 2) {
             arcadeDrive(i * Math.abs(power), gyroPID.getCalculation(gyro.getAngle() - tar));
             print.print(gyro.getAngle());
             return 0;
         } else {
-            stopMotor();
+            if (sud) {
+                suddenly_stop(pos_or_neg);
+            } else {
+                stopMotor();
+            }
+            Init.resetInit(KEY);
             return 1;
         }
     }
@@ -81,21 +85,22 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
             encoderL.reset();
             encoderR.reset();
             gyroPID.setGain(gyroKp, gyroKi, gyroKd);
+            System.out.println("init");
         }
-
         switch (smoothStraightState) {
             case 0:
                 smoothStraightState += gyroStraight_ChangeSpeed(min_power, max_power, stop / 3, tar, false);
+                System.out.println("smooth0");
                 break;
             case 1:
                 smoothStraightState += gyroStraight(max_power, stop / 3, tar, false);
+                System.out.println("smooth1");
                 break;
             case 2:
                 smoothStraightState += gyroStraight_ChangeSpeed(max_power, min_power, stop / 3, tar, sud);
                 break;
         }
 
-        stopMotor();
     }
 
     public void gyroSmoothPivotTurn(char motor, double min_power, double max_power, double angle, boolean sud) {
@@ -150,7 +155,8 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
     }
 
     public int gyroStraight_ChangeSpeed(double first_power, double last_power, double stop, double tar, boolean sud) {
-        if (!Init.isInit("gyroStraight_ChangeSpeed")) {
+        final String KEY = "gyroStraight_ChangeSpeed";
+        if (!Init.isInit(KEY)) {
             encoderL.reset();
             encoderR.reset();
         }
@@ -158,10 +164,7 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
         int i = pos_or_neg ? 1 : -1;
         double K = (Math.abs(last_power) * i - Math.abs(first_power) * i) / Math.abs(stop);
 
-        if (sud) {
-            suddenly_stop(pos_or_neg);
-            return 0;
-        } else if (Math.abs(encoderR.get() - encoderL.get()) < 2 * Math.abs(stop)) {
+        if (Math.abs(encoderR.get() - encoderL.get()) < 2 * Math.abs(stop)) {
             double power = Math.abs(first_power) * i + Math.abs(encoderR.get() - encoderL.get()) * K / 2;
             gyroKp = Math.abs(power) * 0.05 + 0.01;
             gyroKi = Math.abs(power) * 0.0000175 - 0.000006;
@@ -176,7 +179,12 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
             arcadeDrive(power, gyroPID.getCalculation(gyro.getAngle() - tar));
             return 0;
         } else {
-            stopMotor();
+            if (sud) {
+                suddenly_stop(pos_or_neg);
+            } else {
+                stopMotor();
+            }
+            Init.resetInit(KEY);
             return 1;
         }
     }
@@ -287,6 +295,7 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
                 arcadeDrive(0.4, 0);
             }
         }
+        stopMotor();
     }
 
     public void suddenly_stop_one(char motor, boolean pos_or_neg) {

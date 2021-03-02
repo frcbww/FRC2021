@@ -96,6 +96,7 @@ public class Robot extends TimedRobot {
 //        drive.setGyroGain(0,0,0);
         drive.setEncoderGain(0.002, 0, 0);
         loop_count = 1;
+        drive.smoothStraightState = 0;
     }
 
     /**
@@ -104,9 +105,10 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousPeriodic() {
 
-        if (loop_count == 1) {
+//        if (loop_count == 1) {
             int i = 0;
             System.out.println(encoderL.get() + ", " + encoderR.get());
+
             switch (autoSelected) {
                 // バレルレーシング経路
                 case BARREL_RACING_AUTO:
@@ -127,10 +129,10 @@ public class Robot extends TimedRobot {
 
                     // 前進プログラムテスト
                 case DEFAULT_AUTO:
-                    timer.reset();
-                    timer.start();
-                    while (timer.get() < 5) ;
-                    drive.gyroSmoothStraight(0.6, 0.8, 10000, 0, true);
+//                    timer.reset();
+//                    timer.start();
+//                    while (timer.get() < 5) ;
+                    drive.gyroSmoothStraight(0.4, 0.7, 10000, 0, true);
                     break;
 
                 case TUNING:
@@ -139,12 +141,12 @@ public class Robot extends TimedRobot {
                     break;
 
             }
-        } else {
-            drive.stopMotor();
+//        } else {
+//            drive.stopMotor();
+//
+//        }
 
-        }
-
-        loop_count++;
+//        loop_count++;
     }
 
     /**
