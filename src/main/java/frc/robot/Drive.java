@@ -163,6 +163,8 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
             print.print(power);
             if(motor == 'L'){
                 tankDrive(power,encoderR.get()*0.002);
+            } else if(motor == 'R'){
+                tankDrive(encoderL.get()*0.002,power);
             }
         }
         if(sud){suddenly_stop_one(motor,pos_or_neg);}
@@ -240,7 +242,7 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
             while (driveTimer.get()<0.1){mL.set(-0.4*i);}
             mL.stopMotor();
         } else  if(motor == 'R'){
-            while (driveTimer.get()<0.1){mR.set(-0.4*i);}
+            while (driveTimer.get()<0.1){mR.set(0.4*i);}
             mR.stopMotor();
         }
     }

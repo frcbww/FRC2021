@@ -19,7 +19,7 @@ public class Robot extends TimedRobot {
     private static final String BARREL_RACING_AUTO = "Barrel Racing Path";
     private static final String SLALOM_AUTO = "Slalom Path";
     private static final String BOUNCE_AUTO = "Bounce Path";
-    private  static final String TUNING = "Tuning";
+    private static final String TUNING = "Tuning";
     private String autoSelected;
     private final SendableChooser<String> chooser = new SendableChooser<>();
     public final Timer timer = new Timer();
@@ -92,9 +92,9 @@ public class Robot extends TimedRobot {
         c.stop();
         compressor_timer.reset();
         compressor_timer.start();
-        drive.setGyroGain(0.09,0.0000007,0.9);
+        drive.setGyroGain(0.09, 0.0000007, 0.9);
 //        drive.setGyroGain(0,0,0);
-        drive.setEncoderGain(0.002,0,0);
+        drive.setEncoderGain(0.002, 0, 0);
         loop_count = 1;
     }
 
@@ -104,7 +104,7 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousPeriodic() {
 
-        if (loop_count == 1){
+        if (loop_count == 1) {
             int i = 0;
             System.out.println(encoderL.get() + ", " + encoderR.get());
             switch (autoSelected) {
@@ -119,37 +119,20 @@ public class Robot extends TimedRobot {
 
                 // バウンド経路
                 case BOUNCE_AUTO:
-                    timer.reset();timer.start();
-                    while (timer.get()<0.2);
-//                    drive.gyroSmoothStraight(0.5,0.7,3000,false);
-//                    drive.gyroSmoothPivotTurn('R',0.2,0.4,50,true);
-//                    drive.gyroSmoothStraight(0.4,0.7,4500,false);
-//                    drive.gyroSmoothPivotTurn('L',0.2,0.4,50,true);
-//                    drive.gyroSmoothStraight(0.6,0.8,12000,false);
-//                    drive.gyroSmoothPivotTurn('L',0.2,0.2,60,true);
-//                    drive.gyroSmoothStraight(0.4,0.7,7000,true);
-
-                    drive.gyroStraight(0.6,3000,0,false);
-                    drive.gyroSmoothPivotTurn('R',0.2,0.4,50,true);
-                    drive.gyroStraight(0.6,4500,50,false);
-                    drive.gyroSmoothPivotTurn('L',0.2,0.4,50,true);
-                    drive.gyroSmoothStraight(0.6,0.8,12000,0,false);
-                    drive.gyroSmoothPivotTurn('L',0.2,0.2,60,true);
-                    drive.gyroStraight(0.6,7000,0,false);
+//                    while (timer.get()<0.2);
 
 
-                    break;
-
-                // 前進プログラムテスト
+                    // 前進プログラムテスト
                 case DEFAULT_AUTO:
-                    timer.reset();timer.start();
-                    while (timer.get()<5);
-                    drive.gyroSmoothStraight(0.6,0.8,10000,0,true);
+                    timer.reset();
+                    timer.start();
+                    while (timer.get() < 5) ;
+                    drive.gyroSmoothStraight(0.6, 0.8, 10000, 0, true);
                     break;
 
-                case TUNING :
+                case TUNING:
 //                    drive.tank(0.4,0);
-                    drive.gyroPivotTurn_ChangeSpeed('L',0.4,0.7,90,true);
+                    drive.gyroPivotTurn_ChangeSpeed('R', 0.4, 0.7, 90, true);
                     break;
 
             }
@@ -157,6 +140,7 @@ public class Robot extends TimedRobot {
             drive.stopMotor();
 
         }
+
         loop_count++;
     }
 
@@ -186,9 +170,9 @@ public class Robot extends TimedRobot {
         if (Math.abs(stickLR) >= 0.5) {
             stickLR = 0.5 * Math.signum(stickLR);
         }
-        if (controller.getAButton()){
+        if (controller.getAButton()) {
             victor.set(0.5);
-        } else{
+        } else {
             victor.stopMotor();
         }
 
@@ -204,7 +188,7 @@ public class Robot extends TimedRobot {
         double zRotation = convertStickSigmoid(stickLR);
         drive.arcadeDrive(xSpeed, zRotation, true);
 
-        if (compressor_timer.get() < 0.7){
+        if (compressor_timer.get() < 0.7) {
 //            c.start();
         } else {
             c.stop();
@@ -269,7 +253,7 @@ public class Robot extends TimedRobot {
         return gyroPid.getCalculation(gyro.getAngle());
     }
 
-    private void straightDrive_Gyro(double speed, int distance, double Kp, double Ki, double Kd){
+    private void straightDrive_Gyro(double speed, int distance, double Kp, double Ki, double Kd) {
 
     }
 }
