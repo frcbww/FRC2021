@@ -78,37 +78,35 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
     }
 
     public void gyroSmoothPivotTurn(char motor, double min_power, double max_power, double angle, boolean sud){
-        int i;
-        gyro.reset();
         encoderL.reset();
         encoderR.reset();
-        boolean pos_or_neg = angle > 0 && min_power > 0 && max_power >0;
-        double K = Math.abs((max_power-min_power)/(angle/3));
-        double last_power = min_power;
-        if(pos_or_neg){i=1;}else{i=-1;}
-        if(motor == 'L'){
-            for(int count = 1; count<=3; count++){
-                while(Math.abs(gyro.getAngle()) < Math.abs(angle)*count/3){
-                    mL.set(i*(Math.abs(last_power)-Math.abs((gyro.getAngle()-(count-1)*angle/3)*K)*(count-2)));
-                    mR.set(encoderR.get()*0.002);
-                }
-                last_power = max_power;
-            }
-            if(sud){driveTimer.reset();driveTimer.start();while(driveTimer.get()<0.1){mL.set(-i*0.3);}}
-            stopMotor();
-        } else if(motor == 'R'){
-            for(int count = 1; count<=3; count++){
-                while(Math.abs(gyro.getAngle()) < Math.abs(angle)*count/3){
-                    mR.set(-i*(Math.abs(last_power)-Math.abs((gyro.getAngle()+(count-1)*angle/3)*K)*(count-2)));
-                    mL.set(encoderL.get()*0.002);
-                }
-                last_power = max_power;
-            }
-            if(sud){driveTimer.reset();driveTimer.start();while(driveTimer.get()<0.1){mR.set(i*0.3);}}
-            stopMotor();
-        }
-        driveTimer.reset();driveTimer.start();
-        while (driveTimer.get()<0.2);
+
+        gyroPivotTurn_ChangeSpeed(motor,min_power,max_power,angle/3,false);
+        gyroPivotTurn(motor,max_power,angle/3,false);
+        gyroPivotTurn_ChangeSpeed(motor,max_power,min_power,angle/3,sud);
+
+//        if(motor == 'L'){
+//            for(int count = 1; count<=3; count++){
+//                while(Math.abs(gyro.getAngle()) < Math.abs(angle)*count/3){
+//                    mL.set(i*(Math.abs(last_power)-Math.abs((gyro.getAngle()-(count-1)*angle/3)*K)*(count-2)));
+//                    mR.set(encoderR.get()*0.002);
+//                }
+//                last_power = max_power;
+//            }
+//            if(sud){driveTimer.reset();driveTimer.start();while(driveTimer.get()<0.1){mL.set(-i*0.3);}}
+//            stopMotor();
+//        } else if(motor == 'R'){
+//            for(int count = 1; count<=3; count++){
+//                while(Math.abs(gyro.getAngle()) < Math.abs(angle)*count/3){
+//                    mR.set(-i*(Math.abs(last_power)-Math.abs((gyro.getAngle()+(count-1)*angle/3)*K)*(count-2)));
+//                    mL.set(encoderL.get()*0.002);
+//                }
+//                last_power = max_power;
+//            }
+//            if(sud){driveTimer.reset();driveTimer.start();while(driveTimer.get()<0.1){mR.set(i*0.3);}}
+//            stopMotor();
+//        }
+
     }
 
     public void gyroStraight_ChangeSpeed(double first_power, double last_power, double stop, double tar, boolean sud){
@@ -138,7 +136,7 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
         double power;
         boolean pos_or_neg = first_power>0 && last_power>0 && angle>0; if(pos_or_neg){i=1;}else{i=-1;}
         double K = (Math.abs(last_power)*i - Math.abs(first_power)*i) / Math.abs(angle);
-        while(Math.abs(gyro.getAngle()) < Math.abs(angle)){
+        while(Math.abs(gyro.getAngle()- first_gyro) < Math.abs(angle)){
             power = Math.abs(first_power)*i + Math.abs(gyro.getAngle()-first_gyro)*K;
             print.print(power);
             if(motor == 'L'){
@@ -151,11 +149,20 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
         stopMotor();
     }
 
-    public void tank(double left_power, double right_power){
-        driveTimer.reset();driveTimer.start();
-        while(Math.abs(gyro.getAngle()) < 90){
-            tankDrive(0,0);
+    public void gyroPivotTurn(char motor, double power, double angle, boolean sud){
+        encoderL.reset();encoderR.reset();
+        double first_gyro = gyro.getAngle();
+        double i;
+        boolean pos_or_neg = angle>0 && power>0; if(pos_or_neg){i=1;}else{i=-1;}
+        while(Math.abs(gyro.getAngle()- first_gyro) < Math.abs(angle)){
+            if(motor == 'L'){
+                tankDrive(Math.abs(power)*i,encoderR.get()*0.002);
+            } else if(motor == 'R'){
+                tankDrive(encoderL.get()*0.002,Math.abs(power)*i);
+            }
         }
+        if(sud){suddenly_stop_one(motor,pos_or_neg);}
+        stopMotor();
     }
 
 
