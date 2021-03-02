@@ -66,35 +66,15 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
     public void gyroSmoothStraight (double min_power, double max_power, double stop, double tar, boolean sud){
         encoderL.reset();
         encoderR.reset();
-        int i;
-        double power = 0;
         boolean pos_or_neg = min_power > 0 && stop > 0;
-        if(pos_or_neg){i = 1;}else{i = -1;}
         gyroPID.setGain(gyroKp,gyroKi,gyroKd);
         double K = Math.abs((max_power - min_power) / (stop / 3));
 
-        while (Math.abs(encoderR.get()-encoderL.get()) < 2*Math.abs(stop)/3){
-            power = Math.abs(min_power) + Math.abs(encoderR.get()-encoderL.get()) * K / 2;
-//            gyroPID.setGain(Math.abs(gyroKp * power * 2), Math.abs(gyroKi * power * 2), Math.abs(gyroKd * power * 2));
-            arcadeDrive(i*power,gyroPID.getCalculation(gyro.getAngle()-tar));
-            print.print(encoderR.get());
-        }
-        while (Math.abs(encoderR.get()-encoderL.get()) < 4*Math.abs(stop)/3){
-            arcadeDrive(Math.abs(max_power)*i,gyroPID.getCalculation(gyro.getAngle()-tar));
-            print.print(encoderR.get());
-        }
-        while (Math.abs(encoderR.get()-encoderL.get()) < 6*Math.abs(stop)/3){
-            power = Math.abs(max_power) - (Math.abs(encoderR.get()-encoderL.get()) - Math.abs(stop)*4/3) * K / 2;
-//            gyroPID.setGain(Math.abs(gyroKp * power * 2), Math.abs(gyroKi * power * 2), Math.abs(gyroKd * power * 2));
-            arcadeDrive(i*power,gyroPID.getCalculation(gyro.getAngle()-tar));
-            print.print(encoderR.get());
-        }
+        gyroStraight_ChangeSpeed(min_power,max_power,stop/3,tar,false);
+        gyroStraight(max_power,stop/3,tar, false);
+        gyroStraight_ChangeSpeed(max_power,min_power,stop/3,tar,sud);
 
-        if(sud){suddenly_stop(pos_or_neg);}
         stopMotor();
-        System.out.println(encoderR.get());
-//        driveTimer.reset();driveTimer.start();
-//        while (driveTimer.get()<0.2);
     }
 
     public void gyroSmoothPivotTurn(char motor, double min_power, double max_power, double angle, boolean sud){
