@@ -148,11 +148,8 @@ public class Robot extends TimedRobot {
                     break;
 
                 case TUNING :
-                    timer.reset();timer.start();
-                    drive.gyroSmoothPivotTurn('R',0.3,0.3,15,true);
-                    while (timer.get()<2);
-                    drive.setGyroGain(0.03,0.000001,0.3);
-                    drive.gyroStraight(0.6,20000,0,true);
+//                    drive.tank(0.4,0);
+                    drive.gyroPivotTurn_ChangeSpeed('L',0.4,0.7,90,true);
                     break;
 
             }

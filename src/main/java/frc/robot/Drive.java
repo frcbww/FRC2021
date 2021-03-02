@@ -134,14 +134,46 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
     public void gyroStraight_ChangeSpeed(double first_power, double last_power, double stop, double tar, boolean sud){
         encoderL.reset();
         encoderR.reset();
+        double i;
+        boolean pos_or_neg = first_power>0 && last_power>0 && stop>0; if(pos_or_neg){i=1;}else{i=-1;}
         double power;
-        double K = (last_power - first_power) / stop;
-        while(Math.abs(encoderR.get() - encoderL.get()) < 2 * stop){
-            power = first_power + Math.abs(encoderR.get() - encoderL.get()) * K / 2;
+        double K = (Math.abs(last_power)*i - Math.abs(first_power)*i) / Math.abs(stop);
+        while(Math.abs(encoderR.get() - encoderL.get()) < 2 * Math.abs(stop)){
+            power = Math.abs(first_power)*i + Math.abs(encoderR.get() - encoderL.get()) * K / 2;
+            gyroKp = Math.abs(power) * 0.05 +0.01;
+            gyroKi = Math.abs(power) * 0.0000175 - 0.000006; if(gyroKi < 0){gyroKi=0;}
+            gyroKd = Math.abs(power) * 1.5 -0.3; if(gyroKd < 0){gyroKd=0;}
+            gyroPID.setGain(gyroKp,gyroKi,gyroKd);
             arcadeDrive(power, gyroPID.getCalculation(gyro.getAngle()-tar));
         }
-        if(sud){suddenly_stop(first_power > 0);}
+        if(sud){suddenly_stop(pos_or_neg);}
         stopMotor();
+    }
+
+    public void gyroPivotTurn_ChangeSpeed(char motor, double first_power, double last_power, double angle, boolean sud){
+        encoderL.reset();
+        encoderR.reset();
+        double first_gyro = gyro.getAngle();
+        double i;
+        double power;
+        boolean pos_or_neg = first_power>0 && last_power>0 && angle>0; if(pos_or_neg){i=1;}else{i=-1;}
+        double K = (Math.abs(last_power)*i - Math.abs(first_power)*i) / Math.abs(angle);
+        while(Math.abs(gyro.getAngle()) < Math.abs(angle)){
+            power = Math.abs(first_power)*i + Math.abs(gyro.getAngle()-first_gyro)*K;
+            print.print(power);
+            if(motor == 'L'){
+                tankDrive(power,encoderR.get()*0.002);
+            }
+        }
+        if(sud){suddenly_stop_one(motor,pos_or_neg);}
+        stopMotor();
+    }
+
+    public void tank(double left_power, double right_power){
+        driveTimer.reset();driveTimer.start();
+        while(Math.abs(gyro.getAngle()) < 90){
+            tankDrive(0,0);
+        }
     }
 
 
@@ -199,4 +231,18 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
             }
         }
     }
+
+    public void suddenly_stop_one(char motor, boolean pos_or_neg){
+        double i;
+        if(pos_or_neg){i=1;}else{i=-1;}
+        driveTimer.reset();driveTimer.start();
+        if(motor == 'L'){
+            while (driveTimer.get()<0.1){mL.set(-0.4*i);}
+            mL.stopMotor();
+        } else  if(motor == 'R'){
+            while (driveTimer.get()<0.1){mR.set(-0.4*i);}
+            mR.stopMotor();
+        }
+    }
+
 }
