@@ -114,10 +114,10 @@ public class Robot extends TimedRobot {
 
                 // スラローム経路
                 case SLALOM_AUTO:
-//                    drive.gyroPivotTurn_ChangeSpeed('R',0.4,0.4,40,false);
-                    drive.gyroStraight_ChangeSpeed(0.4,0.4,10000,0,false);
-                    drive.gyroPivotTurn_ChangeSpeed('L',0.4,0.4,40,true);
-//                    drive.gyroSmoothStraight(0.4,0.4,32000,0,true);
+                    drive.gyroPivotTurn_ChangeSpeed('R',0.5,0.65,40,false);
+                    drive.gyroSmoothStraight(0.5,0.8,6000,-40,false);
+                    drive.gyroPivotTurn_ChangeSpeed('L',0.5,0.565,40,false);
+                    drive.gyroSmoothStraight(0.5,0.8,13000,0,false);
                     break;
 
                 // バウンド経路

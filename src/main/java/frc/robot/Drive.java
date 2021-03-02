@@ -140,7 +140,7 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
             power = Math.abs(first_power)*i + Math.abs(gyro.getAngle()-first_gyro)*K;
             print.print(power);
             if(motor == 'L'){
-                tankDrive(power,encoderR.get()*0.002);
+                tankDrive(power,-encoderR.get()*0.002);
             } else if(motor == 'R'){
                 tankDrive(encoderL.get()*0.002,power);
             }
