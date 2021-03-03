@@ -43,6 +43,16 @@ public class Robot extends TimedRobot {
     int loop_count;
 
 
+    private void init() {
+        timer.reset();
+        timer.start();
+        compressor_timer.reset();
+        compressor_timer.start();
+        encoderL.reset();
+        encoderR.reset();
+        gyro.reset();
+    }
+
     /**
      * このメソッドはロボットが最初に起動されたときに実行され、初期化コードを書くことができます。
      */
@@ -82,16 +92,11 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousInit() {
         autoSelected = chooser.getSelected();
-        // autoSelected = SmartDashboard.getString("Auto Selector", defaultAuto);
         System.out.println("Auto selected: " + autoSelected);
         init();
-        encoderL.reset();
-        encoderR.reset();
         victor.set(0);
         c.setClosedLoopControl(true);
         c.stop();
-        compressor_timer.reset();
-        compressor_timer.start();
         drive.setGyroGain(0.09, 0.0000007, 0.9);
 //        drive.setGyroGain(0,0,0);
         drive.setEncoderGain(0.002, 0, 0);
@@ -155,8 +160,6 @@ public class Robot extends TimedRobot {
     @Override
     public void teleopInit() {
         init();
-        compressor_timer.reset();
-        compressor_timer.start();
     }
 
     /**
@@ -228,14 +231,6 @@ public class Robot extends TimedRobot {
     @Override
     public void testPeriodic() {
         System.out.println(gyro.getAngle());
-    }
-
-    private void init() {
-        timer.reset();
-        timer.start();
-        encoderL.reset();
-        encoderR.reset();
-        gyro.reset();
     }
 
     // スティックの値をシグモイド関数で変換
