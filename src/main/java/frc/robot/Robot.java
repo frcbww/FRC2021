@@ -22,7 +22,6 @@ public class Robot extends TimedRobot {
     private static final String TUNING = "Tuning";
     private String autoSelected;
     private final SendableChooser<String> chooser = new SendableChooser<>();
-    public final Timer timer = new Timer();
     public final Timer compressor_timer = new Timer();
     private final PID gyroPid = new PID();
     private final Print print = new Print();
@@ -41,17 +40,6 @@ public class Robot extends TimedRobot {
     final double gyroKd = 0.3;
 
     int loop_count;
-
-
-    private void init() {
-        timer.reset();
-        timer.start();
-        compressor_timer.reset();
-        compressor_timer.start();
-        encoderL.reset();
-        encoderR.reset();
-        gyro.reset();
-    }
 
     /**
      * このメソッドはロボットが最初に起動されたときに実行され、初期化コードを書くことができます。
@@ -93,7 +81,7 @@ public class Robot extends TimedRobot {
     public void autonomousInit() {
         autoSelected = chooser.getSelected();
         System.out.println("Auto selected: " + autoSelected);
-        init();
+        drive.init();
         victor.set(0);
         c.setClosedLoopControl(true);
         c.stop();
@@ -101,7 +89,6 @@ public class Robot extends TimedRobot {
 //        drive.setGyroGain(0,0,0);
         drive.setEncoderGain(0.002, 0, 0);
         loop_count = 1;
-        drive.smoothStraightState = 0;
     }
 
     /**
@@ -111,41 +98,41 @@ public class Robot extends TimedRobot {
     public void autonomousPeriodic() {
 
 //        if (loop_count == 1) {
-            int i = 0;
-            System.out.println(encoderL.get() + ", " + encoderR.get());
+        int i = 0;
+        System.out.println(encoderL.get() + ", " + encoderR.get());
 
-            switch (autoSelected) {
-                // バレルレーシング経路
-                case BARREL_RACING_AUTO:
-                    break;
+        switch (autoSelected) {
+            // バレルレーシング経路
+            case BARREL_RACING_AUTO:
+                break;
 
-                // スラローム経路
-                case SLALOM_AUTO:
-                    drive.gyroPivotTurn_ChangeSpeed('R',0.5,0.65,40,false);
-                    drive.gyroSmoothStraight(0.5,0.8,6000,-40,false);
-                    drive.gyroPivotTurn_ChangeSpeed('L',0.5,0.565,40,false);
-                    drive.gyroSmoothStraight(0.5,0.8,13000,0,false);
-                    break;
+            // スラローム経路
+            case SLALOM_AUTO:
+                drive.gyroPivotTurn_ChangeSpeed('R', 0.5, 0.65, 40, false);
+                drive.gyroSmoothStraight(0.5, 0.8, 6000, -40, false);
+                drive.gyroPivotTurn_ChangeSpeed('L', 0.5, 0.565, 40, false);
+                drive.gyroSmoothStraight(0.5, 0.8, 13000, 0, false);
+                break;
 
-                // バウンド経路
-                case BOUNCE_AUTO:
+            // バウンド経路
+            case BOUNCE_AUTO:
 //                    while (timer.get()<0.2);
 
 
-                    // 前進プログラムテスト
-                case DEFAULT_AUTO:
+                // 前進プログラムテスト
+            case DEFAULT_AUTO:
 //                    timer.reset();
 //                    timer.start();
 //                    while (timer.get() < 5) ;
-                    drive.gyroSmoothStraight(0.4, 0.7, 10000, 0, true);
-                    break;
+                drive.gyroSmoothStraight(0.4, 0.7, 10000, 0, true);
+                break;
 
-                case TUNING:
+            case TUNING:
 //                    drive.tank(0.4,0);
-                    drive.gyroSmoothPivotTurn('L',0.4,0.7,90,true);
-                    break;
+                drive.gyroSmoothPivotTurn('L', 0.4, 0.7, 90, true);
+                break;
 
-            }
+        }
 //        } else {
 //            drive.stopMotor();
 //
@@ -159,7 +146,9 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void teleopInit() {
-        init();
+        drive.init();
+        compressor_timer.reset();
+        compressor_timer.start();
     }
 
     /**
@@ -222,7 +211,7 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void testInit() {
-        init();
+        drive.init();
     }
 
     /**
