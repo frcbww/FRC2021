@@ -14,7 +14,8 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
     public ADXRS450_Gyro gyro;
     public SpeedController mL, mR;
 
-    private int smoothStraightState = 0;
+    private int gyroSmoothStraightState = 0;
+    private int gyroSmoothPivotTurnState = 0;
     private double firstGyro = 0;
 
     public Drive(SpeedController sp1, SpeedController sp2) {
@@ -90,17 +91,17 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
             encoderL.reset();
             encoderR.reset();
             gyroPID.setGain(gyroKp, gyroKi, gyroKd);
-            smoothStraightState = 0;
+            gyroSmoothStraightState = 0;
         }
-        switch (smoothStraightState) {
+        switch (gyroSmoothStraightState) {
             case 0:
-                smoothStraightState += gyroStraight_ChangeSpeed(min_power, max_power, stop / 3, tar, false);
+                gyroSmoothStraightState += gyroStraight_ChangeSpeed(min_power, max_power, stop / 3, tar, false);
                 break;
             case 1:
-                smoothStraightState += gyroStraight(max_power, stop / 3, tar, false);
+                gyroSmoothStraightState += gyroStraight(max_power, stop / 3, tar, false);
                 break;
             case 2:
-                smoothStraightState += gyroStraight_ChangeSpeed(max_power, min_power, stop / 3, tar, sud);
+                gyroSmoothStraightState += gyroStraight_ChangeSpeed(max_power, min_power, stop / 3, tar, sud);
                 break;
             case 3:
                 Init.resetInit(KEY);
@@ -172,83 +173,60 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
         }
     }
 
-    public void gyroSmoothPivotTurn(char motor, double min_power, double max_power, double angle, boolean sud) {
-        int i;
-        gyro.reset();
-        encoderL.reset();
-        encoderR.reset();
-        boolean pos_or_neg = angle > 0 && min_power > 0 && max_power > 0;
-        double K = Math.abs((max_power - min_power) / (angle / 3));
-        double last_power = min_power;
-        if (pos_or_neg) {
-            i = 1;
-        } else {
-            i = -1;
+    public int gyroSmoothPivotTurn(char motor, double min_power, double max_power, double angle, boolean sud){
+        final String KEY = "gyroSmoothPivotTurn";
+        if(Init.isNotInit(KEY)){
+            encoderL.reset();
+            encoderR.reset();
+            gyroSmoothPivotTurnState = 0;
         }
-        if (motor == 'L') {
-            for (int count = 1; count <= 3; count++) {
-                while (Math.abs(gyro.getAngle()) < Math.abs(angle) * count / 3) {
-                    mL.set(i * (Math.abs(last_power) - Math.abs((gyro.getAngle() - (count - 1) * angle / 3) * K) * (count - 2)));
-                    mR.set(encoderR.get() * 0.002);
-                }
-                last_power = max_power;
-            }
-            if (sud) {
-                driveTimer.reset();
-                driveTimer.start();
-                while (driveTimer.get() < 0.1) {
-                    mL.set(-i * 0.3);
-                }
-            }
-            stopMotor();
-        } else if (motor == 'R') {
-            for (int count = 1; count <= 3; count++) {
-                while (Math.abs(gyro.getAngle()) < Math.abs(angle) * count / 3) {
-                    mR.set(-i * (Math.abs(last_power) - Math.abs((gyro.getAngle() + (count - 1) * angle / 3) * K) * (count - 2)));
-                    mL.set(encoderL.get() * 0.002);
-                }
-                last_power = max_power;
-            }
-            if (sud) {
-                driveTimer.reset();
-                driveTimer.start();
-                while (driveTimer.get() < 0.1) {
-                    mR.set(i * 0.3);
-                }
-            }
-            stopMotor();
+        switch (gyroSmoothPivotTurnState){
+            case 0:
+                gyroSmoothPivotTurnState += gyroPivotTurn_ChangeSpeed(motor,min_power,max_power,angle/3,false);
+                break;
+            case 1:
+                gyroSmoothPivotTurnState += gyroPivotTurn(motor,max_power,angle/3,false);
+                break;
+            case 2:
+                gyroSmoothPivotTurnState += gyroPivotTurn_ChangeSpeed(motor,max_power,min_power,angle/3,sud);
+                break;
+            case 3:
+                Init.resetInit(KEY);
+                return 1;
+
         }
-        driveTimer.reset();
-        driveTimer.start();
-        while (driveTimer.get() < 0.2) ;
+        return 0;
     }
 
-    public void gyroPivotTurn_ChangeSpeed(char motor, double first_power, double last_power, double angle, boolean sud) {
-        encoderL.reset();
-        encoderR.reset();
-        double first_gyro = gyro.getAngle();
-        double i;
+    public int gyroPivotTurn_ChangeSpeed(char motor, double first_power, double last_power, double angle, boolean sud) {
+        final String KEY = "gyroPivotTurn_ChangeSpeed";
+        if(Init.isNotInit(KEY)){
+            encoderL.reset();
+            encoderR.reset();
+            firstGyro = gyro.getAngle();
+        }
         double power;
         boolean pos_or_neg = first_power > 0 && last_power > 0 && angle > 0;
-        if (pos_or_neg) {
-            i = 1;
-        } else {
-            i = -1;
-        }
+        int i = pos_or_neg ? 1 : -1;
         double K = (Math.abs(last_power) * i - Math.abs(first_power) * i) / Math.abs(angle);
-        while (Math.abs(gyro.getAngle()) < Math.abs(angle)) {
-            power = Math.abs(first_power) * i + Math.abs(gyro.getAngle() - first_gyro) * K;
+        if (Math.abs(gyro.getAngle()) < Math.abs(angle)) {
+            power = Math.abs(first_power) * i + Math.abs(gyro.getAngle() - firstGyro) * K;
             print.print(power);
             if (motor == 'L') {
                 tankDrive(power, encoderR.get() * 0.002);
             } else if (motor == 'R') {
                 tankDrive(encoderL.get() * 0.002, power);
             }
+            return 0;
+        } else{
+            if (sud) {
+                suddenly_stop_one(motor, pos_or_neg);
+            } else {
+                stopMotor();
+            }
+            Init.resetInit(KEY);
+            return 1;
         }
-        if (sud) {
-            suddenly_stop_one(motor, pos_or_neg);
-        }
-        stopMotor();
     }
 
 //    public void encoderStraight (double power, double stop, boolean sud){
