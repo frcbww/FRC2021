@@ -23,7 +23,6 @@ public class Robot extends TimedRobot {
     private String autoSelected;
     private final SendableChooser<String> chooser = new SendableChooser<>();
     public final Timer compressor_timer = new Timer();
-    private final PID gyroPid = new PID();
     private final Print print = new Print();
     public final ADXRS450_Gyro gyro = new ADXRS450_Gyro();
     Encoder encoderL = new Encoder(0, 1, false, Encoder.EncodingType.k2X);
@@ -31,6 +30,7 @@ public class Robot extends TimedRobot {
     private final Drive drive = new Drive(new PWMVictorSPX(0), new PWMVictorSPX(1), encoderL, encoderR, gyro);
 
     public final XboxController controller = new XboxController(0);
+    private String controllerMode = "DefaultMode";
 
     Compressor c = new Compressor();
     VictorSP victor = new VictorSP(2);
@@ -38,6 +38,8 @@ public class Robot extends TimedRobot {
     final double gyroKp = 0.05;
     final double gyroKi = 0.00002;
     final double gyroKd = 0.3;
+
+    private int defaultAutoState = 0, barrelRacingAutoState = 0, slalomAutoState = 0, bounceAtoState = 0, tuningState = 0;
 
     int loop_count;
 
@@ -85,10 +87,13 @@ public class Robot extends TimedRobot {
         victor.set(0);
         c.setClosedLoopControl(true);
         c.stop();
-        drive.setGyroGain(0.09, 0.0000007, 0.9);
-//        drive.setGyroGain(0,0,0);
         drive.setEncoderGain(0.002, 0, 0);
         loop_count = 1;
+        defaultAutoState = 0;
+        barrelRacingAutoState = 0;
+        slalomAutoState = 0;
+        bounceAtoState = 0;
+        tuningState = 0;
     }
 
     /**
@@ -99,7 +104,7 @@ public class Robot extends TimedRobot {
 
 //        if (loop_count == 1) {
         int i = 0;
-        System.out.println(encoderL.get() + ", " + encoderR.get());
+//        System.out.println(encoderL.get() + ", " + encoderR.get());
 
         switch (autoSelected) {
             // バレルレーシング経路
@@ -108,28 +113,60 @@ public class Robot extends TimedRobot {
 
             // スラローム経路
             case SLALOM_AUTO:
-                drive.gyroPivotTurn_ChangeSpeed('R', 0.5, 0.65, 40, false);
-                drive.gyroSmoothStraight(0.5, 0.8, 6000, -40, false);
-                drive.gyroPivotTurn_ChangeSpeed('L', 0.5, 0.565, 40, false);
-                drive.gyroSmoothStraight(0.5, 0.8, 13000, 0, false);
+                System.out.println(gyro.getAngle());
+                switch (slalomAutoState) {
+                    case 0:
+                        slalomAutoState += drive.gyroPivotTurn_ChangeSpeed('R', 0.5, 0.65, 40, false);
+                        break;
+                    case 1:
+                        slalomAutoState += drive.gyroSmoothStraight(0.5, 0.8, 6000, -40, false);
+                        break;
+                    case 2:
+                        slalomAutoState += drive.gyroPivotTurn_ChangeSpeed('L', 0.5, 0.6, 40, false);
+                        break;
+                    case 3:
+                        slalomAutoState += drive.gyroSmoothStraight(0.5, 0.8, 18000, 0, false);
+                        break;
+                    case 4:
+                        slalomAutoState += drive.gyroPivotTurn_ChangeSpeed('L', 0.5, 0.7, 90, false);
+                        break;
+                    case 5:
+                        slalomAutoState += drive.gyroStraight_ChangeSpeed(0.7, 0.4, 1300, 90, true);
+                        break;
+                    case 6:
+                        if (gyro.getAngle() > -270) {
+                            drive.arcadeDrive(0.65, -0.43);
+                        } else {
+                            drive.stopMotor();
+                            slalomAutoState++;
+                        }
+                        break;
+                    case 7:
+                        slalomAutoState += drive.gyroStraight_ChangeSpeed(0.6, 0.5, 1300, -270, false);
+                        break;
+                    case 8:
+                        slalomAutoState += drive.gyroPivotTurn_ChangeSpeed('L', 0.5, 0.6, 90, true);
+                        break;
+                }
                 break;
 
             // バウンド経路
             case BOUNCE_AUTO:
-//                    while (timer.get()<0.2);
-
 
                 // 前進プログラムテスト
             case DEFAULT_AUTO:
-//                    timer.reset();
-//                    timer.start();
-//                    while (timer.get() < 5) ;
-                drive.gyroSmoothStraight(0.4, 0.7, 10000, 0, true);
+                switch (defaultAutoState){
+                    case 0:
+                        defaultAutoState += drive.gyroSmoothPivotTurn('R',0.45,0.5,15,true);
+                        break;
+                    case 1:
+                        drive.setGyroGain(0.04,0.0008,0.3);
+                        defaultAutoState += drive.gyroStraight(0.4,16000,0,true);
+                        break;
+                }
                 break;
 
             case TUNING:
-//                    drive.tank(0.4,0);
-                drive.gyroSmoothPivotTurn('L', 0.4, 0.7, 90, true);
                 break;
 
         }
@@ -160,36 +197,36 @@ public class Robot extends TimedRobot {
         double stickLX = controller.getX(GenericHID.Hand.kLeft);
         double stickLY = controller.getY(GenericHID.Hand.kLeft);
         double stickRX = controller.getX(GenericHID.Hand.kRight);
+        double stickRY = controller.getY(GenericHID.Hand.kRight);
 
         double stickLR = 0.35 * stickLX + 0.4 * stickRX;
 
         //スピード制
         if (Math.abs(stickLR) >= 0.5) {
-            stickLR = 0.5 * Math.signum(stickLR);
+            stickLR = 0.6 * Math.signum(stickLR);
         }
-        if (controller.getAButton()) {
-            victor.set(0.5);
-        } else {
-            victor.stopMotor();
-        }
-
-//        System.out.println(controller.getTriggerAxis(GenericHID.Hand.kLeft));
-
-
-        print.print(encoderL.get() + ", " + encoderR.get());
-//        System.out.println(gyro.getAngle());
 
 
         //足回りモーター
-        double xSpeed = -0.7 * convertStickSigmoid(stickLY);
+        double xSpeed = -0.8 * convertStickSigmoid(stickLY);
+        if(controller.getXButton()){
+            System.out.println("slow");
+        }
         double zRotation = convertStickSigmoid(stickLR);
         drive.arcadeDrive(xSpeed, zRotation, true);
 
-        if (compressor_timer.get() < 0.7) {
+
+//        if (controller.getAButton()) {
+//            victor.set(0.5);
+//        } else {
+//            victor.stopMotor();
+//        }
+
+//        if (compressor_timer.get() < 0.7) {
 //            c.start();
-        } else {
-            c.stop();
-        }
+//        } else {
+//            c.stop();
+//        }
     }
 
     /**
@@ -227,22 +264,4 @@ public class Robot extends TimedRobot {
         return 2 / (1 + Math.exp(-3 * zRotation)) - 1;
     }
 
-    // エンコーダーを使用した直進
-    private double convertStraightEncoder(double leftEncoder, double rightEncoder) {
-        double kP = 0.004;
-        double diff = rightEncoder + leftEncoder;
-        return kP * diff;
-    }
-
-    // ジャイロを使用した直進
-    private double convertAngleGyro(double targetAngle, double Kp, double Ki, double Kd) {
-        gyroPid.setGain(Kp, Ki, Kd);
-        gyroPid.setTarget(targetAngle);
-
-        return gyroPid.getCalculation(gyro.getAngle());
-    }
-
-    private void straightDrive_Gyro(double speed, int distance, double Kp, double Ki, double Kd) {
-
-    }
 }

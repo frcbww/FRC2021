@@ -3,12 +3,13 @@ package frc.robot;
 import edu.wpi.first.wpilibj.*;
 
 public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
+    public Gain gyroGain = new Gain();
+    public Gain encoderGain = new Gain();
     private final Print print = new Print();
-    private final PID gyroPID = new PID();
-    private final PID encoderPID = new PID();
+    private final PID gyroPID = new PID(gyroGain);
+    private final PID encoderPID = new PID(encoderGain);
     private final Timer driveTimer = new Timer();
-    double left, right;
-    double tar, val, dif;
+    private final Init init = new Init();
     double gyroKp = 0, gyroKi = 0, gyroKd = 0;
     public Encoder encoderL, encoderR;
     public ADXRS450_Gyro gyro;
@@ -31,23 +32,16 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
         encoderL = ec1;
         encoderR = ec2;
         gyro = gy;
+        gyroGain.setGyroGainApproximate(0.4, 0.04, 0.0005, 0.6, 0.6, 0.06, 0.0008, 1.2);
     }
 
     public void init() {
         encoderL.reset();
         encoderR.reset();
         gyro.reset();
-        Init.resetAll();
+        init.resetAll();
     }
 
-//    public void setGain(double Kp, double Ki, double Kd){
-//        gyroKp = Kp;
-//        gyroKi = Ki;
-//        gyroKd = Kd;
-//        encoderKp = Kp;
-//        encoderKi = Ki;
-//        encoderKd = Kd;
-//    }
 
     public void setGyroGain(double Kp, double Ki, double Kd) {
         gyroKp = Kp;
@@ -62,9 +56,11 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
 
     public int gyroStraight(double power, double stop, double tar, boolean sud) {
         final String KEY = "gyroStraight";
-        if (Init.isNotInit(KEY)) {
+        if (init.isNotInit(KEY)) {
             encoderL.reset();
             encoderR.reset();
+            if (!init.isNotInit("gyroSmoothStraight")) gyroPID.reset();
+            gyroGain.doGyroGainApproximate(Math.abs(power));
         }
 
         boolean pos_or_neg = power > 0 && stop > 0;
@@ -80,18 +76,19 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
             } else {
                 stopMotor();
             }
-            Init.resetInit(KEY);
+            init.resetInit(KEY);
             return 1;
         }
     }
 
     public int gyroSmoothStraight(double min_power, double max_power, double stop, double tar, boolean sud) {
         final String KEY = "gyroSmoothStraight";
-        if (Init.isNotInit(KEY)) {
+        if (init.isNotInit(KEY)) {
             encoderL.reset();
             encoderR.reset();
-            gyroPID.setGain(gyroKp, gyroKi, gyroKd);
+            gyroPID.reset();
             gyroSmoothStraightState = 0;
+            System.out.println("initStraight");
         }
         switch (gyroSmoothStraightState) {
             case 0:
@@ -104,7 +101,7 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
                 gyroSmoothStraightState += gyroStraight_ChangeSpeed(max_power, min_power, stop / 3, tar, sud);
                 break;
             case 3:
-                Init.resetInit(KEY);
+                init.resetInit(KEY);
                 return 1;
         }
         return 0;
@@ -112,9 +109,10 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
 
     public int gyroStraight_ChangeSpeed(double first_power, double last_power, double stop, double tar, boolean sud) {
         final String KEY = "gyroStraight_ChangeSpeed";
-        if (Init.isNotInit(KEY)) {
+        if (init.isNotInit(KEY)) {
             encoderL.reset();
             encoderR.reset();
+            if (init.isNotInit("gyroSmoothStraight")) gyroPID.reset();
         }
         boolean pos_or_neg = first_power > 0 && last_power > 0 && stop > 0;
         int i = pos_or_neg ? 1 : -1;
@@ -122,16 +120,7 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
 
         if (Math.abs(encoderR.get() - encoderL.get()) < 2 * Math.abs(stop)) {
             double power = Math.abs(first_power) * i + Math.abs(encoderR.get() - encoderL.get()) * K / 2;
-            gyroKp = Math.abs(power) * 0.05 + 0.01;
-            gyroKi = Math.abs(power) * 0.0000175 - 0.000006;
-            if (gyroKi < 0) {
-                gyroKi = 0;
-            }
-            gyroKd = Math.abs(power) * 1.5 - 0.3;
-            if (gyroKd < 0) {
-                gyroKd = 0;
-            }
-            gyroPID.setGain(gyroKp, gyroKi, gyroKd);
+            gyroGain.doGyroGainApproximate(Math.abs(power));
             arcadeDrive(power, gyroPID.getCalculation(gyro.getAngle() - tar));
             return 0;
         } else {
@@ -140,17 +129,18 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
             } else {
                 stopMotor();
             }
-            Init.resetInit(KEY);
+            init.resetInit(KEY);
             return 1;
         }
     }
 
     public int gyroPivotTurn(char motor, double power, double angle, boolean sud) {
         final String KEY = "gyroPivotTurn";
-        if (Init.isNotInit(KEY)) {
+        if (init.isNotInit(KEY)) {
             encoderL.reset();
             encoderR.reset();
             firstGyro = gyro.getAngle();
+            System.out.println("init");
         }
         boolean pos_or_neg = angle > 0 && power > 0;
         int i = pos_or_neg ? 1 : -1;
@@ -168,30 +158,31 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
             } else {
                 stopMotor();
             }
-            Init.resetInit(KEY);
+            init.resetInit(KEY);
+            System.out.println("gyroPivotEnd");
             return 1;
         }
     }
 
-    public int gyroSmoothPivotTurn(char motor, double min_power, double max_power, double angle, boolean sud){
+    public int gyroSmoothPivotTurn(char motor, double min_power, double max_power, double angle, boolean sud) {
         final String KEY = "gyroSmoothPivotTurn";
-        if(Init.isNotInit(KEY)){
+        if (init.isNotInit(KEY)) {
             encoderL.reset();
             encoderR.reset();
             gyroSmoothPivotTurnState = 0;
         }
-        switch (gyroSmoothPivotTurnState){
+        switch (gyroSmoothPivotTurnState) {
             case 0:
-                gyroSmoothPivotTurnState += gyroPivotTurn_ChangeSpeed(motor,min_power,max_power,angle/3,false);
+                gyroSmoothPivotTurnState += gyroPivotTurn_ChangeSpeed(motor, min_power, max_power, angle / 3, false);
                 break;
             case 1:
-                gyroSmoothPivotTurnState += gyroPivotTurn(motor,max_power,angle/3,false);
+                gyroSmoothPivotTurnState += gyroPivotTurn(motor, max_power, angle / 3, false);
                 break;
             case 2:
-                gyroSmoothPivotTurnState += gyroPivotTurn_ChangeSpeed(motor,max_power,min_power,angle/3,sud);
+                gyroSmoothPivotTurnState += gyroPivotTurn_ChangeSpeed(motor, max_power, min_power, angle / 3, sud);
                 break;
             case 3:
-                Init.resetInit(KEY);
+                init.resetInit(KEY);
                 return 1;
 
         }
@@ -200,51 +191,37 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
 
     public int gyroPivotTurn_ChangeSpeed(char motor, double first_power, double last_power, double angle, boolean sud) {
         final String KEY = "gyroPivotTurn_ChangeSpeed";
-        if(Init.isNotInit(KEY)){
+        if (init.isNotInit(KEY)) {
             encoderL.reset();
             encoderR.reset();
             firstGyro = gyro.getAngle();
+            System.out.println("initPivot");
         }
-        double power;
+
         boolean pos_or_neg = first_power > 0 && last_power > 0 && angle > 0;
         int i = pos_or_neg ? 1 : -1;
         double K = (Math.abs(last_power) * i - Math.abs(first_power) * i) / Math.abs(angle);
+
         if (Math.abs(gyro.getAngle()) < Math.abs(angle)) {
-            power = Math.abs(first_power) * i + Math.abs(gyro.getAngle() - firstGyro) * K;
+            double power = Math.abs(first_power) * i + Math.abs(gyro.getAngle() - firstGyro) * K;
             print.print(power);
             if (motor == 'L') {
-                tankDrive(power, encoderR.get() * 0.002);
+                tankDrive(power, -encoderR.get() * 0.002);
             } else if (motor == 'R') {
                 tankDrive(encoderL.get() * 0.002, power);
             }
             return 0;
-        } else{
+        } else {
             if (sud) {
                 suddenly_stop_one(motor, pos_or_neg);
             } else {
                 stopMotor();
             }
-            Init.resetInit(KEY);
+            init.resetInit(KEY);
             return 1;
         }
     }
 
-//    public void encoderStraight (double power, double stop, boolean sud){
-//        encoderL.reset();
-//        encoderR.reset();
-//        if (stop > 0){
-//            while ((encoderR.get() - encoderL.get()) < stop * 2){
-//                arcadeDrive(power,encoderPID.getCalculation(encoderR.get()+encoderL.get()));
-//            }
-//        } else {
-//            while ((encoderL.get() - encoderR.get()) < stop * 2){
-//                arcadeDrive(power,encoderPID.getCalculation(encoderL.get()+encoderR.get()));
-//            }
-//        }
-//
-//        if (sud){suddenly_stop(stop>0);}
-//        stopMotor();
-//    }
 
 //    public void arcDrive (double power, double radius, double rotation_angle, boolean sud){
 //        gyro.reset();
