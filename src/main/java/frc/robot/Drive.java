@@ -36,8 +36,7 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
         encoderL.reset();
         encoderR.reset();
         gyro.reset();
-        smoothStraightState = 0;
-        firstGyro = 0;
+        Init.resetAll();
     }
 
 //    public void setGain(double Kp, double Ki, double Kd){
@@ -62,7 +61,7 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
 
     public int gyroStraight(double power, double stop, double tar, boolean sud) {
         final String KEY = "gyroStraight";
-        if (!Init.isInit(KEY)) {
+        if (Init.isNotInit(KEY)) {
             encoderL.reset();
             encoderR.reset();
         }
@@ -85,11 +84,13 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
         }
     }
 
-    public void gyroSmoothStraight(double min_power, double max_power, double stop, double tar, boolean sud) {
-        if (!Init.isInit("gyroSmoothStraight")) {
+    public int gyroSmoothStraight(double min_power, double max_power, double stop, double tar, boolean sud) {
+        final String KEY = "gyroSmoothStraight";
+        if (Init.isNotInit(KEY)) {
             encoderL.reset();
             encoderR.reset();
             gyroPID.setGain(gyroKp, gyroKi, gyroKd);
+            smoothStraightState = 0;
         }
         switch (smoothStraightState) {
             case 0:
@@ -101,12 +102,16 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
             case 2:
                 smoothStraightState += gyroStraight_ChangeSpeed(max_power, min_power, stop / 3, tar, sud);
                 break;
+            case 3:
+                Init.resetInit(KEY);
+                return 1;
         }
+        return 0;
     }
 
     public int gyroStraight_ChangeSpeed(double first_power, double last_power, double stop, double tar, boolean sud) {
         final String KEY = "gyroStraight_ChangeSpeed";
-        if (!Init.isInit(KEY)) {
+        if (Init.isNotInit(KEY)) {
             encoderL.reset();
             encoderR.reset();
         }
@@ -141,7 +146,7 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
 
     public int gyroPivotTurn(char motor, double power, double angle, boolean sud) {
         final String KEY = "gyroPivotTurn";
-        if (!Init.isInit(KEY)) {
+        if (Init.isNotInit(KEY)) {
             encoderL.reset();
             encoderR.reset();
             firstGyro = gyro.getAngle();
