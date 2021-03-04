@@ -10,12 +10,17 @@ public class Init {
         if (list.contains(key)) {
             return false;
         } else {
-            list.add(key);
             return true;
         }
     }
 
-    public void resetInit(String key) {
+    public void done(String key){
+        if(!list.contains(key)){
+            list.add(key);
+        }
+    }
+
+    public void reset(String key) {
         list.remove(key);
     }
 

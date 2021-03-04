@@ -113,40 +113,48 @@ public class Robot extends TimedRobot {
 
             // スラローム経路
             case SLALOM_AUTO:
-                System.out.println(gyro.getAngle());
+//                System.out.println(gyro.getAngle());
                 switch (slalomAutoState) {
                     case 0:
-                        slalomAutoState += drive.gyroPivotTurn_ChangeSpeed('R', 0.5, 0.65, 40, false);
+                        slalomAutoState += drive.gyroStraight_ChangeSpeed(0.6,0.7,2000,0,false);
                         break;
                     case 1:
-                        slalomAutoState += drive.gyroSmoothStraight(0.5, 0.8, 6000, -40, false);
+                        slalomAutoState += drive.gyroArcTurn_ChangeSpeed(0.7,0.8,-0.7,70,false);
                         break;
                     case 2:
-                        slalomAutoState += drive.gyroPivotTurn_ChangeSpeed('L', 0.5, 0.6, 40, false);
+                        slalomAutoState += drive.gyroArcTurn_ChangeSpeed(0.8,0.9,0.7,70,false);
                         break;
                     case 3:
-                        slalomAutoState += drive.gyroSmoothStraight(0.5, 0.8, 18000, 0, false);
+                        slalomAutoState += drive.gyroSmoothStraight(0.8,1,10700,0,false);
                         break;
                     case 4:
-                        slalomAutoState += drive.gyroPivotTurn_ChangeSpeed('L', 0.5, 0.7, 90, false);
+                        slalomAutoState += drive.gyroArcTurn_ChangeSpeed(0.8,0.7,0.7,60,false);
                         break;
                     case 5:
-                        slalomAutoState += drive.gyroStraight_ChangeSpeed(0.7, 0.4, 1300, 90, true);
+                        slalomAutoState += drive.gyroSmoothStraight(0.7,0.8,2000,60,false);
                         break;
                     case 6:
-                        if (gyro.getAngle() > -270) {
-                            drive.arcadeDrive(0.65, -0.43);
-                        } else {
-                            drive.stopMotor();
-                            slalomAutoState++;
-                        }
+                        slalomAutoState += drive.gyroArcTurn(0.8,-1,300,false);
                         break;
                     case 7:
-                        slalomAutoState += drive.gyroStraight_ChangeSpeed(0.6, 0.5, 1300, -270, false);
+                        slalomAutoState += drive.gyroStraight_ChangeSpeed(0.8,0.8,1000,-240,false);
                         break;
                     case 8:
-                        slalomAutoState += drive.gyroPivotTurn_ChangeSpeed('L', 0.5, 0.6, 90, true);
+                        slalomAutoState += drive.gyroArcTurn_ChangeSpeed(0.8,0.9,0.7,60,false);
+                        System.out.println("turn");
                         break;
+                    case 9:
+                        slalomAutoState += drive.gyroSmoothStraight(0.8,1,10700,-180,true);
+                        System.out.println("Straight");
+                        break;
+                    case 10:
+                        slalomAutoState += drive.gyroArcTurn_ChangeSpeed(0.8,0.7,0.8,60,false);
+                        break;
+                    case 11:
+                        slalomAutoState += drive.gyroSmoothStraight(0.7,0.9,1500,-120,false);
+                        break;
+                    case 12:
+                        slalomAutoState += drive.gyroArcTurn_ChangeSpeed(0.8,0.7,-0.8,60,true);
                 }
                 break;
 
@@ -157,11 +165,12 @@ public class Robot extends TimedRobot {
             case DEFAULT_AUTO:
                 switch (defaultAutoState){
                     case 0:
-                        defaultAutoState += drive.gyroSmoothPivotTurn('R',0.45,0.5,15,true);
+                        defaultAutoState += drive.gyroSmoothStraight(0.5,0.7,5000,0,true);
+                        System.out.println("first");
                         break;
                     case 1:
-                        drive.setGyroGain(0.04,0.0008,0.3);
-                        defaultAutoState += drive.gyroStraight(0.4,16000,0,true);
+                        drive.gyroSmoothStraight(0.5,0.7,10000,0,true);
+                        System.out.println("second");
                         break;
                 }
                 break;
