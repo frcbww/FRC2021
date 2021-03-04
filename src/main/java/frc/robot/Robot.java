@@ -125,7 +125,7 @@ public class Robot extends TimedRobot {
                         slalomAutoState += drive.gyroArcTurn_ChangeSpeed(0.8,0.9,0.7,70,false);
                         break;
                     case 3:
-                        slalomAutoState += drive.gyroSmoothStraight(0.8,1,10700,0,false);
+                        slalomAutoState += drive.gyroSmoothStraight(0.8,1,8000,0,false);
                         break;
                     case 4:
                         slalomAutoState += drive.gyroArcTurn_ChangeSpeed(0.8,0.7,0.7,60,false);
@@ -144,7 +144,7 @@ public class Robot extends TimedRobot {
                         System.out.println("turn");
                         break;
                     case 9:
-                        slalomAutoState += drive.gyroSmoothStraight(0.8,1,10700,-180,true);
+                        slalomAutoState += drive.gyroSmoothStraight(0.8,1,9500,-180,false);
                         System.out.println("Straight");
                         break;
                     case 10:
@@ -225,11 +225,11 @@ public class Robot extends TimedRobot {
         drive.arcadeDrive(xSpeed, zRotation, true);
 
 
-//        if (controller.getAButton()) {
-//            victor.set(0.5);
-//        } else {
-//            victor.stopMotor();
-//        }
+        if (controller.getBumper(GenericHID.Hand.kLeft)) {
+            victor.set(0.5);
+        } else {
+            victor.stopMotor();
+        }
 
 //        if (compressor_timer.get() < 0.7) {
 //            c.start();
@@ -258,6 +258,7 @@ public class Robot extends TimedRobot {
     @Override
     public void testInit() {
         drive.init();
+
     }
 
     /**
@@ -265,7 +266,7 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void testPeriodic() {
-        System.out.println(gyro.getAngle());
+        drive.gyroStraight(0.4,10000,0,false);
     }
 
     // スティックの値をシグモイド関数で変換
