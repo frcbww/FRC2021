@@ -35,8 +35,8 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
         encoderL = ec1;
         encoderR = ec2;
         gyro = gy;
-        gyroGain.setGyroGainApproximate(0.4, 0.04, 0.0005, 0.3, 0.6, 0.06, 0.0008, 0.6);
-        arcGain.setGyroGainApproximate(0.4, 0.04, 0.0005, 0.6, 0.9, 0.06, 0.0008, 1.2);
+        gyroGain.setGyroGainApproximate(0.4, 0.04, 0.0005, 0.3, 0.6, 0.06, 0.001, 0.6);
+        arcGain.setGyroGainApproximate(0.4, 0.04, 0.0007, 0.6, 0.9, 0.06, 0.0012, 1.2);
     }
 
     public void init() {
@@ -79,7 +79,7 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
             if (sud) {
                 suddenly_stop(pos_or_neg);
             } else {
-                stopMotor();
+//                stopMotor();
             }
             init.reset(KEY);
             return 1;
@@ -135,7 +135,7 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
             if (sud) {
                 suddenly_stop(pos_or_neg);
             } else {
-                stopMotor();
+//                stopMotor();
             }
             init.reset(KEY);
             return 1;
@@ -164,7 +164,7 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
             if (sud) {
                 suddenly_stop(pos_or_neg);
             } else {
-                stopMotor();
+//                stopMotor();
             }
             init.reset(KEY);
             return 1;
@@ -195,7 +195,7 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
             if (sud) {
                 suddenly_stop(pos_or_neg);
             } else {
-                stopMotor();
+//                stopMotor();
             }
             init.reset(KEY);
             return 1;
@@ -251,7 +251,7 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
             if (sud) {
                 suddenly_stop_one(motor, pos_or_neg);
             } else {
-                stopMotor();
+//                stopMotor();
             }
             init.reset(KEY);
             System.out.println("gyroPivotEnd");
@@ -312,7 +312,7 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
             if (sud) {
                 suddenly_stop_one(motor, pos_or_neg);
             } else {
-                stopMotor();
+//                stopMotor();
             }
             init.reset(KEY);
             return 1;

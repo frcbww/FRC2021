@@ -5,11 +5,13 @@
 
 package frc.robot;
 
+import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.cameraserver.CameraServer;
-
+import edu.wpi.cscore.CvSink;
+import edu.wpi.cscore.CvSource;
 /**
  * VMは、このクラスを自動的に実行し、TimedRobotのドキュメントに記載されている各モードに対応するメソッドです。
  * このプロジェクトの作成後にこのクラスまたはパッケージの名前を変更する場合は、プロジェクトのbuild.gradleファイルも更新する必要があります。
@@ -25,6 +27,7 @@ public class Robot extends TimedRobot {
     public final Timer compressor_timer = new Timer();
     private final Print print = new Print();
     public final ADXRS450_Gyro gyro = new ADXRS450_Gyro();
+    public final CvSink cv = new CvSink("OpenCV_USBCamera");
     Encoder encoderL = new Encoder(0, 1, false, Encoder.EncodingType.k2X);
     Encoder encoderR = new Encoder(2, 3, false, Encoder.EncodingType.k2X);
     private final Drive drive = new Drive(new PWMVictorSPX(0), new PWMVictorSPX(1), encoderL, encoderR, gyro);
@@ -48,7 +51,7 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotInit() {
-        CameraServer.getInstance().startAutomaticCapture(0);
+        CameraServer.getInstance().startAutomaticCapture("USBCamera",0);
         chooser.setDefaultOption("Default Auto", DEFAULT_AUTO);
         chooser.addOption("Barrel Racing Path", BARREL_RACING_AUTO);
         chooser.addOption("Slalom Path", SLALOM_AUTO);
@@ -109,6 +112,30 @@ public class Robot extends TimedRobot {
         switch (autoSelected) {
             // バレルレーシング経路
             case BARREL_RACING_AUTO:
+                System.out.println(gyro.getAngle());
+                switch (barrelRacingAutoState){
+                    case 0:
+                        barrelRacingAutoState += drive.gyroStraight_ChangeSpeed(0.7,0.9,10000,0,false);
+                        break;
+                    case 1:
+                        barrelRacingAutoState += drive.gyroArcTurn(0.8,0.8,360,false);
+                        break;
+                    case 2:
+                        barrelRacingAutoState += drive.gyroSmoothStraight(0.8,1,7000,360,false);
+                        break;
+                    case 3:
+                        barrelRacingAutoState += drive.gyroArcTurn(0.8,-0.77,315,false);
+                        break;
+                    case 4:
+                        barrelRacingAutoState += drive.gyroSmoothStraight(0.8,1,6000,45,false);
+                        break;
+                    case 5:
+                        barrelRacingAutoState += drive.gyroArcTurn(0.8,-0.82,225,false);
+                        break;
+                    case 6:
+                        barrelRacingAutoState += drive.gyroSmoothStraight(0.8,1,21500,-180,true);
+                        break;
+                }
                 break;
 
             // スラローム経路
@@ -160,6 +187,40 @@ public class Robot extends TimedRobot {
 
             // バウンド経路
             case BOUNCE_AUTO:
+                System.out.println(gyro.getAngle());
+                switch (bounceAtoState){
+                    case 0:
+                        bounceAtoState += drive.gyroStraight_ChangeSpeed(0.8,0.9,1550,0,false);
+                        break;
+                    case 1:
+                        bounceAtoState +=drive.gyroArcTurn_ChangeSpeed(0.9,0.6,-0.64,90,true);
+                        break;
+                    case 2:
+                        bounceAtoState += drive.gyroStraight_ChangeSpeed(0.8,0.9,-5000,-90,false);
+                        break;
+                    case 3:
+                        bounceAtoState += drive.gyroArcTurn(0.9,-0.61,-180,false);
+                        break;
+                    case 4:
+                        bounceAtoState += drive.gyroStraight_ChangeSpeed(0.9,0.5,-5500,-270,true);
+                        break;
+                    case 5:
+                        bounceAtoState += drive.gyroStraight_ChangeSpeed(0.8,0.9,6500,-270,false);
+                        break;
+                    case 6:
+                        bounceAtoState += drive.gyroArcTurn(0.9,-0.61,180,false);
+                        break;
+                    case 7:
+                        bounceAtoState += drive.gyroStraight_ChangeSpeed(0.9,0.5,6200,-450,true);
+                        break;
+                    case 8:
+                        bounceAtoState += drive.gyroStraight_ChangeSpeed(0.8,0.9,-700,-450,false);
+                        break;
+                    case 9:
+                        bounceAtoState += drive.gyroArcTurn(0.8,-0.65,-90,true);
+                        break;
+                }
+                break;
 
                 // 前進プログラムテスト
             case DEFAULT_AUTO:
@@ -169,7 +230,7 @@ public class Robot extends TimedRobot {
                         System.out.println("first");
                         break;
                     case 1:
-                        drive.gyroSmoothStraight(0.5,0.7,10000,0,true);
+                        defaultAutoState += drive.gyroSmoothStraight(0.5,0.7,10000,0,true);
                         System.out.println("second");
                         break;
                 }
@@ -218,10 +279,11 @@ public class Robot extends TimedRobot {
 
         //足回りモーター
         double xSpeed = -0.8 * convertStickSigmoid(stickLY);
-        if(controller.getXButton()){
-            System.out.println("slow");
-        }
         double zRotation = convertStickSigmoid(stickLR);
+        if(controller.getBumper(GenericHID.Hand.kRight)){
+            xSpeed *= 0.7;
+            zRotation *= 0.7;
+        }
         drive.arcadeDrive(xSpeed, zRotation, true);
 
 
