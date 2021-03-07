@@ -72,8 +72,9 @@ public class Robot extends TimedRobot {
 
             Mat source = new Mat();
             Mat output = new Mat();
-            List<MatOfPoint> contours = new ArrayList<>();
+            List<MatOfPoint> contours = new ArrayList<>();//輪郭
             Mat hierarchy = new Mat();
+            double viewAngle = 68.5;
 
             while (!Thread.interrupted()) {
                 if (cvSink.grabFrame(source) == 0) {
@@ -82,7 +83,23 @@ public class Robot extends TimedRobot {
                 contours.clear();
                 Core.inRange(source, new Scalar(0, 150, 150), new Scalar(100, 255, 255), output);
                 Imgproc.findContours(output, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_NONE);
-                Imgproc.drawContours(source, contours, -1, new Scalar(255, 0, 0), 3);
+//                Imgproc.drawContours(source, contours, -1, new Scalar(255, 0, 0), 3);
+                double maxArea = 0;
+                Rect contourRect = null;
+                for (int index = 0;index < contours.size();index++){
+                    double area = Imgproc.contourArea(contours.get(index));
+                    if (area > maxArea) {
+                        maxArea = area;
+                        contourRect = Imgproc.boundingRect(contours.get(index));
+                    }
+                }
+                if (contourRect == null){
+                    continue;
+                }
+                double angle = Math.toRadians(viewAngle*(contourRect.width/320.0));
+                double length = 17/(2*Math.tan(angle/2));
+                System.out.println(length);
+                Imgproc.rectangle(source, contourRect.tl(), contourRect.br(), new Scalar(255,0,0),1);
                 outputStream.putFrame(source);
             }
         }).start();
