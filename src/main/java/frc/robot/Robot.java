@@ -26,6 +26,9 @@ public class Robot extends TimedRobot {
     private static final String SLALOM_AUTO = "Slalom Path";
     private static final String BOUNCE_AUTO = "Bounce Path";
     private static final String TUNING = "Tuning";
+    private static final String PATH_A = "Path_A";
+    private static final String PATH_B = "Path_B";
+    private static String Red_or_Blue = "red";
     private String autoSelected;
     private final SendableChooser<String> chooser = new SendableChooser<>();
     public final Timer compressor_timer = new Timer();
@@ -41,11 +44,14 @@ public class Robot extends TimedRobot {
     Compressor c = new Compressor();
     VictorSP victor = new VictorSP(2);
 
+    Rect contourRect = null;
+    double length=10000;
+
     final double gyroKp = 0.05;
     final double gyroKi = 0.00002;
     final double gyroKd = 0.3;
 
-    private int defaultAutoState = 0, barrelRacingAutoState = 0, slalomAutoState = 0, bounceAtoState = 0, tuningState = 0;
+    private int defaultAutoState = 0, barrelRacingAutoState = 0, slalomAutoState = 0, bounceAtoState = 0, tuningState = 0, pathA_State = 0, pathA_Red_State = 0, pathA_Blue_State = 0, pathB_State = 0, pathB_Red_State = 0, pathB_Blue_State = 0;
 
     int loop_count;
 
@@ -62,6 +68,7 @@ public class Robot extends TimedRobot {
         chooser.addOption("Slalom Path", SLALOM_AUTO);
         chooser.addOption("Bounce Path", BOUNCE_AUTO);
         chooser.addOption("Tuning", TUNING);
+        chooser.addOption("PathA",PATH_A);
         SmartDashboard.putData("Auto choices", chooser);
         gyro.calibrate();
         c.stop();
@@ -83,9 +90,8 @@ public class Robot extends TimedRobot {
                 contours.clear();
                 Core.inRange(source, new Scalar(0, 150, 150), new Scalar(100, 255, 255), output);
                 Imgproc.findContours(output, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_NONE);
-//                Imgproc.drawContours(source, contours, -1, new Scalar(255, 0, 0), 3);
-                double maxArea = 0;
-                Rect contourRect = null;
+                double maxArea = 100;
+                contourRect = null;
                 for (int index = 0;index < contours.size();index++){
                     double area = Imgproc.contourArea(contours.get(index));
                     if (area > maxArea) {
@@ -93,13 +99,13 @@ public class Robot extends TimedRobot {
                         contourRect = Imgproc.boundingRect(contours.get(index));
                     }
                 }
-                if (contourRect == null){
-                    continue;
+                if (contourRect != null){
+                    double angle = Math.toRadians(viewAngle*(contourRect.width/320.0));
+                    length = 17/(2*Math.tan(angle/2));
+                    Imgproc.rectangle(source, contourRect.tl(), contourRect.br(), new Scalar(255,0,0),1);
+                } else {
+                    length = 10000;
                 }
-                double angle = Math.toRadians(viewAngle*(contourRect.width/320.0));
-                double length = 17/(2*Math.tan(angle/2));
-                System.out.println(length);
-                Imgproc.rectangle(source, contourRect.tl(), contourRect.br(), new Scalar(255,0,0),1);
                 outputStream.putFrame(source);
             }
         }).start();
@@ -133,6 +139,7 @@ public class Robot extends TimedRobot {
         victor.set(0);
         c.setClosedLoopControl(true);
         c.stop();
+        compressor_timer.reset(); compressor_timer.start();
         drive.setEncoderGain(0.002, 0, 0);
         loop_count = 1;
         defaultAutoState = 0;
@@ -140,6 +147,12 @@ public class Robot extends TimedRobot {
         slalomAutoState = 0;
         bounceAtoState = 0;
         tuningState = 0;
+        pathA_State = 0;
+        pathA_Red_State = 0;
+        pathA_Blue_State = 0;
+        pathB_State = 0;
+        pathB_Red_State = 0;
+        pathB_Blue_State = 0;
     }
 
     /**
@@ -148,9 +161,7 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousPeriodic() {
 
-//        if (loop_count == 1) {
         int i = 0;
-//        System.out.println(encoderL.get() + ", " + encoderR.get());
 
         switch (autoSelected) {
             // バレルレーシング経路
@@ -269,13 +280,72 @@ public class Robot extends TimedRobot {
             case DEFAULT_AUTO:
                 switch (defaultAutoState) {
                     case 0:
-                        defaultAutoState += drive.gyroSmoothStraight(0.5, 0.7, 5000, 0, true);
+                        defaultAutoState += drive.gyroPivotTurn_ChangeSpeed('R',0.5, 0.7, 60, true);
                         System.out.println("first");
                         break;
-                    case 1:
-                        defaultAutoState += drive.gyroSmoothStraight(0.5, 0.7, 10000, 0, true);
-                        System.out.println("second");
+                }
+                break;
+
+            case PATH_A:
+                if(compressor_timer.get() < 0.7){
+                    c.start();
+                } else {
+                    c.stop();
+                }
+                switch (pathA_State){
+                    case 0:
+                        victor.set(0.5);
+                        pathA_State += drive.gyroStraight_ChangeSpeed(0.7,0.8,7000,0,false);
                         break;
+                    case 1:
+                        pathA_State += drive.gyroArcTurn(0.8,0.8,27,false);
+                        break;
+                    case 2:
+                        if(length < 100){
+                            Red_or_Blue = "red";
+                        } else {
+                            Red_or_Blue = "blue";
+                        }
+                        System.out.println(Red_or_Blue);
+                        pathA_State += 1;
+                        break;
+                }
+                if(pathA_State >= 3 && Red_or_Blue == "red"){
+                    switch (pathA_Red_State){
+                        case 0:
+                            pathA_Red_State += drive.gyroStraight_ChangeSpeed(0.9,0.5,3200,27,false);
+                            break;
+                        case 1:
+                            pathA_Red_State += drive.gyroPivotTurn_ChangeSpeed('R',0.8,0.5,90,false);
+                            break;
+                        case 2:
+                            pathA_Red_State += drive.gyroSmoothStraight(0.7,1,7000,-63,false);
+                            break;
+                        case 3:
+                            pathA_Red_State += drive.gyroArcTurn(0.8,0.9,63,false);
+                            break;
+                        case 4:
+                            pathA_Red_State += drive.gyroSmoothStraight(0.7,1,15000,15,true);
+                            break;
+                    }
+                } else if(pathA_State >= 3 && Red_or_Blue == "blue"){
+                    switch (pathA_Blue_State){
+                        case 0:
+                            pathA_Blue_State += drive.gyroStraight_ChangeSpeed(0.9,0.7,7000,35,false);
+                            break;
+                        case 1:
+                            pathA_Blue_State += drive.gyroPivotTurn_ChangeSpeed('R',0.8,0.5,100,false);
+                            break;
+                        case 2:
+                            pathA_Blue_State += drive.gyroSmoothStraight(0.7,1,7000,-65,false);
+                            break;
+                        case 3:
+                            pathA_Blue_State += drive.gyroPivotTurn_ChangeSpeed('L',0.7,0.55,98,false);
+                            break;
+                        case 4:
+                            pathA_Blue_State += drive.gyroSmoothStraight(0.7,1,13000,33,true);
+                            break;
+                    }
                 }
                 break;
 
@@ -283,12 +353,6 @@ public class Robot extends TimedRobot {
                 break;
 
         }
-//        } else {
-//            drive.stopMotor();
-//
-//        }
-
-//        loop_count++;
     }
 
     /**

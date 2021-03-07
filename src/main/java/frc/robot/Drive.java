@@ -299,7 +299,7 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
         int i = pos_or_neg ? 1 : -1;
         double K = (Math.abs(last_power) * i - Math.abs(first_power) * i) / Math.abs(angle);
 
-        if (Math.abs(gyro.getAngle()) < Math.abs(angle)) {
+        if (Math.abs(gyro.getAngle()-firstGyro) < Math.abs(angle)) {
             double power = Math.abs(first_power) * i + Math.abs(gyro.getAngle() - firstGyro) * K;
             print.print(power);
             if (motor == 'L') {
