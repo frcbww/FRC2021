@@ -90,6 +90,7 @@ public class Robot extends TimedRobot {
                 contours.clear();
                 Core.inRange(source, new Scalar(0, 150, 150), new Scalar(100, 255, 255), output);
                 Imgproc.findContours(output, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_NONE);
+                Imgproc.putText(source, "Test", new Point(0, 0), Core.FONT_HERSHEY_PLAIN, 1.0 ,new Scalar(255,255,255));
                 double maxArea = 100;
                 contourRect = null;
                 for (int index = 0; index < contours.size(); index++) {
