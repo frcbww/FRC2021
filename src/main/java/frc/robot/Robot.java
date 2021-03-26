@@ -437,21 +437,29 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void teleopPeriodic() {
+        final double K_LX = 0.3;
+        final double K_RX = 0.4;
+
         autoSelected = PATH_A;
         Red_or_Blue = "Red";
+
         //コントローラーデータ
         double stickLX = controller.getX(GenericHID.Hand.kLeft);
         double stickLY = controller.getY(GenericHID.Hand.kLeft);
         double stickRX = controller.getX(GenericHID.Hand.kRight);
         double stickRY = controller.getY(GenericHID.Hand.kRight);
 
-        double stickLR = 0.35 * stickLX + 0.4 * stickRX;
+        double stickLR;
+        if (Math.signum(stickLX) == Math.signum(stickRX)) {
+            stickLR = Math.abs(stickLX) > Math.abs(stickRX) ? K_LX * stickLX : K_RX * stickRX;
+        } else {
+            stickLR = K_LX * stickLX + K_RX * stickRX;
+        }
 
-        //スピード制
+        //スピード制限
         if (Math.abs(stickLR) >= 0.5) {
             stickLR = 0.6 * Math.signum(stickLR);
         }
-
 
         //足回りモーター
         double xSpeed = -0.8 * convertStickSigmoid(stickLY);
@@ -464,7 +472,6 @@ public class Robot extends TimedRobot {
         zRotation /= controller.getTriggerAxis(GenericHID.Hand.kRight) + 1;
 
         drive.arcadeDrive(xSpeed, zRotation, true);
-
 
         if (controller.getBumper(GenericHID.Hand.kLeft)) {
             victor.set(0.5);
