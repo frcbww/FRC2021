@@ -194,8 +194,6 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
         } else {
             if (sud) {
                 suddenly_stop(pos_or_neg);
-            } else {
-//                stopMotor();
             }
             init.reset(KEY);
             return 1;
