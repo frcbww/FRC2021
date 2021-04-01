@@ -56,6 +56,8 @@ public class Robot extends TimedRobot {
 
     private int autoState = 0, pathA_State = 0, pathA_Red_State = 0, pathA_Blue_State = 0, pathB_State = 0, pathB_Red_State = 0, pathB_Blue_State = 0, testState = 0;
 
+    int loop_count;
+
     /**
      * このメソッドはロボットが最初に起動されたときに実行され、初期化コードを書くことができます。
      */
@@ -424,7 +426,6 @@ public class Robot extends TimedRobot {
         drive.init();
         compressor_timer.reset();
         compressor_timer.start();
-        stickAngle_ = 0;
     }
 
     /**
@@ -432,22 +433,43 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void teleopPeriodic() {
+        final double K_LX = 0.3;
+        final double K_RX = 0.4;
+
+        autoSelected = PATH_A;
+        Red_or_Blue = "Red";
+
         //コントローラーデータ
         double stickLX = controller.getX(GenericHID.Hand.kLeft);
         double stickLY = controller.getY(GenericHID.Hand.kLeft);
         double stickRX = controller.getX(GenericHID.Hand.kRight);
         double stickRY = controller.getY(GenericHID.Hand.kRight);
 
-        double stickLR = 0.35 * stickLX + 0.4 * stickRX;
+        //右スティックと左スティックの中から大きい値を採用
+        double stickLR;
+        if (Math.signum(stickLX) == Math.signum(stickRX)) {
+            stickLR = Math.abs(stickLX) > Math.abs(stickRX) ? K_LX * stickLX : K_RX * stickRX;
+        } else {
+            stickLR = K_LX * stickLX + K_RX * stickRX;
+        }
 
-        //スピード制
+        //スピード制限
         if (Math.abs(stickLR) >= 0.5) {
             stickLR = 0.6 * Math.signum(stickLR);
         }
 
+        //LB: 回収機構
+        if (controller.getBumper(GenericHID.Hand.kLeft)) {
+            victor.set(0.5);
+        } else {
+            victor.stopMotor();
+        }
+
+        //RB: 低速モード切り替え
+        double highSpeed = controller.getBumper(GenericHID.Hand.kRight) ? 0.6 : 0.8;
 
         //足回りモーター
-        double xSpeed = -0.8 * convertStickSigmoid(stickLY);
+        double xSpeed = -highSpeed * convertStickSigmoid(stickLY);
         double zRotation = convertStickSigmoid(stickLR);
 
         xSpeed *= controller.getTriggerAxis(GenericHID.Hand.kLeft) * 0.25 + 1;
@@ -458,12 +480,6 @@ public class Robot extends TimedRobot {
 
         drive.arcadeDrive(xSpeed, zRotation, true);
 
-
-        if (controller.getBumper(GenericHID.Hand.kLeft)) {
-            victor.set(0.5);
-        } else {
-            victor.stopMotor();
-        }
 //        double targetAngle, progressAngle, error;
 //        boolean isForward;
 //        double stick_X = Math.abs(stick.getX()) < 0.1 ? 0 : stick.getX();
