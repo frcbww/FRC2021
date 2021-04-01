@@ -3,13 +3,13 @@ package frc.robot;
 import edu.wpi.first.wpilibj.*;
 
 public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
-    public Gain gyroGain = new Gain();
-    public Gain encoderGain = new Gain();
-    public Gain arcGain = new Gain();
+    private final Gain gyroGain = new Gain();
+    private final Gain stickGain = new Gain();
+    private final Gain arcGain = new Gain();
     private final Print print = new Print();
     private final PID gyroPID = new PID(gyroGain);
     private final PID arcPID = new PID(arcGain);
-    private final PID encoderPID = new PID(encoderGain);
+    private final PID stickPID = new PID(stickGain);
     private final Timer driveTimer = new Timer();
     private final Init init = new Init();
     double gyroKp = 0, gyroKi = 0, gyroKd = 0;
@@ -37,6 +37,7 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
         gyro = gy;
         gyroGain.setGyroGainApproximate(0.4, 0.04, 0.0005, 0.3, 0.6, 0.06, 0.001, 0.6);
         arcGain.setGyroGainApproximate(0.4, 0.04, 0.0007, 0.6, 0.9, 0.06, 0.0012, 1.2);
+        stickGain.setGyroGainApproximate(0.4, 0.04, 0, 0.3, 0.6, 0.06, 0, 0.6);
     }
 
     public void init() {
@@ -52,10 +53,6 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
         gyroKi = Ki;
         gyroKd = Kd;
         gyroPID.setGain(Kp, Ki, Kd);
-    }
-
-    public void setEncoderGain(double Kp, double Ki, double Kd) {
-        encoderPID.setGain(Kp, Ki, Kd);
     }
 
     public int gyroStraight(double power, double stop, double tar, boolean sud) {
@@ -84,6 +81,12 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
             init.reset(KEY);
             return 1;
         }
+    }
+
+    public void stickGyro(double power, double tar) {
+        stickPID.setTarget(tar);
+        stickGain.doGyroGainApproximate(Math.abs(power));
+        arcadeDrive(power,stickPID.getCalculation(gyro.getAngle()));
     }
 
     public int gyroSmoothStraight(double min_power, double max_power, double stop, double tar, boolean sud) {
@@ -317,25 +320,6 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
         }
     }
 
-
-    public void encoderStraight(double power, double stop, boolean sud) {
-        encoderL.reset();
-        encoderR.reset();
-        if (stop > 0) {
-            while ((encoderR.get() - encoderL.get()) < stop * 2) {
-                arcadeDrive(power, encoderPID.getCalculation(encoderR.get() + encoderL.get()));
-            }
-        } else {
-            while ((encoderL.get() - encoderR.get()) < stop * 2) {
-                arcadeDrive(power, encoderPID.getCalculation(encoderL.get() + encoderR.get()));
-            }
-        }
-
-        if (sud) {
-            suddenly_stop(stop > 0);
-        }
-        stopMotor();
-    }
 
     public void suddenly_stop(boolean pos_or_neg) {
         driveTimer.reset();

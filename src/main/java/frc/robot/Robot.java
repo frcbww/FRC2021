@@ -42,7 +42,8 @@ public class Robot extends TimedRobot {
     private final Drive drive = new Drive(new PWMVictorSPX(0), new PWMVictorSPX(1), encoderL, encoderR, gyro);
 
     public final XboxController controller = new XboxController(0);
-    private String controllerMode = "DefaultMode";
+    public final Joystick stick = new Joystick(0);
+    private final String controllerMode = "DefaultMode";
 
     Compressor c = new Compressor();
     VictorSP victor = new VictorSP(2);
@@ -51,14 +52,9 @@ public class Robot extends TimedRobot {
     double length = 10000;
     boolean pos_or_neg;
 
-
-    final double gyroKp = 0.05;
-    final double gyroKi = 0.00002;
-    final double gyroKd = 0.3;
+    double stickAngle_ = 0;
 
     private int autoState = 0, pathA_State = 0, pathA_Red_State = 0, pathA_Blue_State = 0, pathB_State = 0, pathB_Red_State = 0, pathB_Blue_State = 0, testState = 0;
-
-    int loop_count;
 
     /**
      * このメソッドはロボットが最初に起動されたときに実行され、初期化コードを書くことができます。
@@ -154,8 +150,6 @@ public class Robot extends TimedRobot {
         compressor_timer.start();
         timer.reset();
         timer.start();
-        drive.setEncoderGain(0.002, 0, 0);
-        loop_count = 1;
         autoState = 0;
         pathA_State = 0;
         pathA_Red_State = 0;
@@ -430,6 +424,7 @@ public class Robot extends TimedRobot {
         drive.init();
         compressor_timer.reset();
         compressor_timer.start();
+        stickAngle_ = 0;
     }
 
     /**
@@ -437,8 +432,6 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void teleopPeriodic() {
-        autoSelected = PATH_A;
-        Red_or_Blue = "Red";
         //コントローラーデータ
         double stickLX = controller.getX(GenericHID.Hand.kLeft);
         double stickLY = controller.getY(GenericHID.Hand.kLeft);
@@ -471,11 +464,31 @@ public class Robot extends TimedRobot {
         } else {
             victor.stopMotor();
         }
-
-//        if (compressor_timer.get() < 0.7) {
-//            c.start();
+//        double targetAngle, progressAngle, error;
+//        boolean isForward;
+//        double stick_X = Math.abs(stick.getX()) < 0.1 ? 0 : stick.getX();
+//        double stick_Y = Math.abs(stick.getY()) < 0.1 ? 0 : -stick.getY();
+//        double stickAngle = Math.atan2(stick_X,stick_Y);
+//        double stickMagnitude = Math.max(Math.abs(Math.sin(stickAngle)),Math.abs(Math.cos(stickAngle))) * Math.sqrt(Math.pow(stick_X,2) + Math.pow(stick_Y,2));
+//        stickAngle = stickMagnitude==0 ? stickAngle_ :stickAngle*180/Math.PI;
+//        stickAngle_ = stickAngle;
+//
+////        System.out.println(stickAngle + ":" + stickMagnitude);
+//
+//        progressAngle = Math.floor(Math.abs(gyro.getAngle()-stickAngle) / 180) * 360 * Math.signum(gyro.getAngle()-stickAngle) + stickAngle;
+////        System.out.println(progressAngle);
+//
+//        isForward = Math.abs(gyro.getAngle()-progressAngle) < 90;
+//        if(isForward){
+//            targetAngle = progressAngle;
 //        } else {
-//            c.stop();
+//            targetAngle = progressAngle+Math.signum(gyro.getAngle()-progressAngle)*180;
+//        }
+//        error = gyro.getAngle()-targetAngle;
+//        if(Math.abs(error)>15){
+//            drive.arcadeDrive(0,-0.01*error);
+//        } else {
+//            drive.stickGyro(0.8*stickMagnitude*(isForward? 1:-1),targetAngle);
 //        }
     }
 
