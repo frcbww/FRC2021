@@ -52,7 +52,7 @@ public class Robot extends TimedRobot {
     double length = 10000;
     boolean pos_or_neg;
 
-    double stickAngle_ = 0;
+    double stickAngle_deg = 0;
 
     private int autoState = 0, pathA_State = 0, pathA_Red_State = 0, pathA_Blue_State = 0, pathB_State = 0, pathB_Red_State = 0, pathB_Blue_State = 0, testState = 0;
 
@@ -481,31 +481,22 @@ public class Robot extends TimedRobot {
         drive.arcadeDrive(xSpeed, zRotation, true);
 
 //        double targetAngle, progressAngle, error;
-//        boolean isForward;
+//        double isForward;
+//        double stick_z = stick.getZ();
 //        double stick_X = Math.abs(stick.getX()) < 0.1 ? 0 : stick.getX();
 //        double stick_Y = Math.abs(stick.getY()) < 0.1 ? 0 : -stick.getY();
-//        double stickAngle = Math.atan2(stick_X,stick_Y);
-//        double stickMagnitude = Math.max(Math.abs(Math.sin(stickAngle)),Math.abs(Math.cos(stickAngle))) * Math.sqrt(Math.pow(stick_X,2) + Math.pow(stick_Y,2));
-//        stickAngle = stickMagnitude==0 ? stickAngle_ :stickAngle*180/Math.PI;
-//        stickAngle_ = stickAngle;
+//        double stickAngle_rad = Math.atan2(stick_X,stick_Y);
+//        double stickMagnitude = Math.min(1,Math.sqrt(Math.pow(stick_X,2) + Math.pow(stick_Y,2)))*((stick.getThrottle()-1)/-2);
+////        double stickMagnitude = Math.max(Math.abs(Math.sin(stickAngle_rad)),Math.abs(Math.cos(stickAngle_rad))) * Math.sqrt(Math.pow(stick_X,2) + Math.pow(stick_Y,2));
+//        stickAngle_deg = stickMagnitude==0 ? stickAngle_deg :stickAngle_rad*180/Math.PI;
+//        double[] direction = getDirection(gyro.getAngle(),stickAngle_deg);
 //
-////        System.out.println(stickAngle + ":" + stickMagnitude);
-//
-//        progressAngle = Math.floor(Math.abs(gyro.getAngle()-stickAngle) / 180) * 360 * Math.signum(gyro.getAngle()-stickAngle) + stickAngle;
-////        System.out.println(progressAngle);
-//
-//        isForward = Math.abs(gyro.getAngle()-progressAngle) < 90;
-//        if(isForward){
-//            targetAngle = progressAngle;
+//        if(stickMagnitude == 0 && Math.abs(stick_z) > 0.05){
+//            drive.arcadeDrive(0,stick_z*0.45);
 //        } else {
-//            targetAngle = progressAngle+Math.signum(gyro.getAngle()-progressAngle)*180;
+//            drive.stickGyro(stickMagnitude * direction[0], direction[1]);
 //        }
-//        error = gyro.getAngle()-targetAngle;
-//        if(Math.abs(error)>15){
-//            drive.arcadeDrive(0,-0.01*error);
-//        } else {
-//            drive.stickGyro(0.8*stickMagnitude*(isForward? 1:-1),targetAngle);
-//        }
+
     }
 
     /**
@@ -541,6 +532,14 @@ public class Robot extends TimedRobot {
     // スティックの値をシグモイド関数で変換
     private double convertStickSigmoid(double zRotation) {
         return 2 / (1 + Math.exp(-3 * zRotation)) - 1;
+    }
+
+    private double[] getDirection(double robot_angle,double target){
+        double error = ((robot_angle-target) % 360 + 360) % 360;
+        double data[] = new double[2];
+        data[0] = error < 90 || error > 270 ? 1:-1;
+        data[1] = (error+90) % 180 -90;
+        return data;
     }
 
 }

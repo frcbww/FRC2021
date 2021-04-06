@@ -37,7 +37,7 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
         gyro = gy;
         gyroGain.setGyroGainApproximate(0.4, 0.04, 0.0005, 0.3, 0.6, 0.06, 0.001, 0.6);
         arcGain.setGyroGainApproximate(0.4, 0.04, 0.0007, 0.6, 0.9, 0.06, 0.0012, 1.2);
-        stickGain.setGyroGainApproximate(0.4, 0.04, 0, 0.3, 0.6, 0.06, 0, 0.6);
+        stickGain.setGyroGainApproximate(0.4, 0.012, 0, 0, 0.6, 0.018, 0, 0);
     }
 
     public void init() {
@@ -83,10 +83,9 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
         }
     }
 
-    public void stickGyro(double power, double tar) {
-        stickPID.setTarget(tar);
+    public void stickGyro(double power, double error) {
         stickGain.doGyroGainApproximate(Math.abs(power));
-        arcadeDrive(power,stickPID.getCalculation(gyro.getAngle()));
+        arcadeDrive(power,stickPID.getCalculation(error));
     }
 
     public int gyroSmoothStraight(double min_power, double max_power, double stop, double tar, boolean sud) {
