@@ -15,6 +15,7 @@ import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * VMは、このクラスを自動的に実行し、TimedRobotのドキュメントに記載されている各モードに対応するメソッドです。
@@ -30,6 +31,7 @@ public class Robot extends TimedRobot {
     private static final String PATH_A = "Path_A";
     private static final String PATH_B = "Path_B";
     private static String Red_or_Blue = "";
+    private static String TELEOP_MODE = "Arcade";
     //    private static String Route = "A_red";
     private String autoSelected;
     private final SendableChooser<String> chooser = new SendableChooser<>();
@@ -43,7 +45,6 @@ public class Robot extends TimedRobot {
 
     public final XboxController controller = new XboxController(0);
     public final Joystick stick = new Joystick(0);
-    private final String controllerMode = "DefaultMode";
 
     Compressor c = new Compressor();
     VictorSP victor = new VictorSP(2);
@@ -250,33 +251,36 @@ public class Robot extends TimedRobot {
                 System.out.println(gyro.getAngle());
                 switch (autoState) {
                     case 0:
-                        autoState += drive.gyroStraight_ChangeSpeed(0.8, 0.9, 1550, 0, false);
+                        autoState += drive.gyroStraight_ChangeSpeed(0.8, 0.9, 250, 0, false);
                         break;
                     case 1:
                         autoState += drive.gyroArcTurn_ChangeSpeed(0.9, 0.6, -0.64, 90, true);
                         break;
                     case 2:
-                        autoState += drive.gyroStraight_ChangeSpeed(0.8, 0.9, -5000, -90, false);
+                        autoState += drive.gyroArcTurn_ChangeSpeed(0.6,0.9,-0.7,-20,false);
                         break;
                     case 3:
-                        autoState += drive.gyroArcTurn(0.9, -0.61, -180, false);
+                        autoState += drive.gyroStraight(0.9,-5000,-110,false);
                         break;
                     case 4:
-                        autoState += drive.gyroStraight_ChangeSpeed(0.9, 0.5, -5500, -270, true);
+                        autoState += drive.gyroArcTurn(0.8,-0.88,-160,false);
                         break;
                     case 5:
-                        autoState += drive.gyroStraight_ChangeSpeed(0.8, 0.9, 6500, -270, false);
+                        autoState += drive.gyroStraight_ChangeSpeed(0.9,0.6,-5500,-270,true);
                         break;
                     case 6:
-                        autoState += drive.gyroArcTurn(0.9, -0.61, 180, false);
+                        autoState += drive.gyroStraight_ChangeSpeed(0.8, 0.9, 5500, -270, false);
                         break;
                     case 7:
-                        autoState += drive.gyroStraight_ChangeSpeed(0.9, 0.5, 6200, -450, true);
+                        autoState += drive.gyroArcTurn(0.9, -0.61, 180, false);
                         break;
                     case 8:
-                        autoState += drive.gyroStraight_ChangeSpeed(0.8, 0.9, -700, -450, false);
+                        autoState += drive.gyroStraight_ChangeSpeed(0.9, 0.5, 5200, -450, true);
                         break;
                     case 9:
+                        autoState += drive.gyroStraight_ChangeSpeed(0.8, 0.9, -700, -450, false);
+                        break;
+                    case 10:
                         autoState += drive.gyroArcTurn(0.8, -0.65, -90, true);
                         break;
                 }
@@ -426,6 +430,7 @@ public class Robot extends TimedRobot {
         drive.init();
         compressor_timer.reset();
         compressor_timer.start();
+        TELEOP_MODE = "Arcade";
     }
 
     /**
@@ -433,29 +438,53 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void teleopPeriodic() {
-        final double K_LX = 0.3;
-        final double K_RX = 0.4;
-
-        autoSelected = PATH_A;
-        Red_or_Blue = "Red";
-
         //コントローラーデータ
         double stickLX = controller.getX(GenericHID.Hand.kLeft);
         double stickLY = controller.getY(GenericHID.Hand.kLeft);
         double stickRX = controller.getX(GenericHID.Hand.kRight);
         double stickRY = controller.getY(GenericHID.Hand.kRight);
 
-        //右スティックと左スティックの中から大きい値を採用
-        double stickLR;
-        if (Math.signum(stickLX) == Math.signum(stickRX)) {
-            stickLR = Math.abs(stickLX) > Math.abs(stickRX) ? K_LX * stickLX : K_RX * stickRX;
-        } else {
-            stickLR = K_LX * stickLX + K_RX * stickRX;
+        //操作モード切替
+        if(controller.getStartButtonPressed()){
+            TELEOP_MODE = Objects.equals(TELEOP_MODE, "Arcade") ? "Tank" : "Arcade";
         }
 
-        //スピード制限
-        if (Math.abs(stickLR) >= 0.5) {
-            stickLR = 0.6 * Math.signum(stickLR);
+        //操作モード
+        if (Objects.equals(TELEOP_MODE, "Arcade")){
+            final double K_LX = 0.3;
+            final double K_RX = 0.4;
+
+            //右スティックと左スティックの中から大きい値を採用
+            double stickLR;
+            if (Math.signum(stickLX) == Math.signum(stickRX)) {
+                stickLR = Math.abs(stickLX) > Math.abs(stickRX) ? K_LX * stickLX : K_RX * stickRX;
+            } else {
+                stickLR = K_LX * stickLX + K_RX * stickRX;
+            }
+
+            //スピード制限
+            if (Math.abs(stickLR) >= 0.5) {
+                stickLR = 0.6 * Math.signum(stickLR);
+            }
+
+            //RB: 低速モード切り替え
+            double highSpeed = controller.getBumper(GenericHID.Hand.kRight) ? 0.6 : 0.8;
+
+            //足回りモーター
+            double xSpeed = -highSpeed * convertStickSigmoid(stickLY);
+            double zRotation = convertStickSigmoid(stickLR);
+
+            xSpeed *= controller.getTriggerAxis(GenericHID.Hand.kLeft) * 0.25 + 1;
+            zRotation *= controller.getTriggerAxis(GenericHID.Hand.kLeft) * 0.25 + 1;
+
+            xSpeed /= controller.getTriggerAxis(GenericHID.Hand.kRight) + 1;
+            zRotation /= controller.getTriggerAxis(GenericHID.Hand.kRight) + 1;
+
+            drive.arcadeDrive(xSpeed, zRotation, true);
+
+        } else if(Objects.equals(TELEOP_MODE, "Tank")){
+            drive.tankDrive(-0.8*stickLY,-0.8*stickRY);
+
         }
 
         //LB: 回収機構
@@ -464,21 +493,6 @@ public class Robot extends TimedRobot {
         } else {
             victor.stopMotor();
         }
-
-        //RB: 低速モード切り替え
-        double highSpeed = controller.getBumper(GenericHID.Hand.kRight) ? 0.6 : 0.8;
-
-        //足回りモーター
-        double xSpeed = -highSpeed * convertStickSigmoid(stickLY);
-        double zRotation = convertStickSigmoid(stickLR);
-
-        xSpeed *= controller.getTriggerAxis(GenericHID.Hand.kLeft) * 0.25 + 1;
-        zRotation *= controller.getTriggerAxis(GenericHID.Hand.kLeft) * 0.25 + 1;
-
-        xSpeed /= controller.getTriggerAxis(GenericHID.Hand.kRight) + 1;
-        zRotation /= controller.getTriggerAxis(GenericHID.Hand.kRight) + 1;
-
-        drive.arcadeDrive(xSpeed, zRotation, true);
 
 //        double targetAngle, progressAngle, error;
 //        double isForward;
