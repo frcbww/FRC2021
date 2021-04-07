@@ -30,7 +30,7 @@ public class Robot extends TimedRobot {
     private static final String GALACTIC_AUTO = "Galactic Auto";
     private static final String PATH_A = "Path_A";
     private static final String PATH_B = "Path_B";
-    private static String Red_or_Blue = "";
+    private static String RED_OR_BLUE = "";
     private static String TELEOP_MODE = "Arcade";
     //    private static String Route = "A_red";
     private String autoSelected;
@@ -96,7 +96,7 @@ public class Robot extends TimedRobot {
                 Core.inRange(source, new Scalar(0, 150, 150), new Scalar(100, 255, 255), output);
                 Imgproc.findContours(output, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_NONE);
 
-                String text = (Red_or_Blue.isEmpty()) ? "Searching..." : autoSelected + " | " + Red_or_Blue;
+                String text = (RED_OR_BLUE.isEmpty()) ? "Searching..." : autoSelected + " | " + RED_OR_BLUE;
                 Imgproc.putText(source, text, new Point(8, 230), Core.FONT_HERSHEY_DUPLEX, 0.6, new Scalar(255, 255, 255));
 
                 double maxArea = 0;
@@ -168,7 +168,7 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousPeriodic() {
         System.out.println(autoSelected);
-        System.out.println(Red_or_Blue);
+        System.out.println(RED_OR_BLUE);
 
         switch (autoSelected) {
             // バレルレーシング経路
@@ -288,15 +288,7 @@ public class Robot extends TimedRobot {
 
             // 前進プログラムテスト
             case DEFAULT_AUTO:
-                if (compressor_timer.get() < 0.7) {
-                    c.start();
-                } else {
-                    c.stop();
-                }
-                if (length < 100) {
-                    timer.stop();
-                }
-                System.out.println(timer.get());
+                drive.arcadeDrive(0.4,0);
                 break;
 
             case GALACTIC_AUTO:
@@ -312,11 +304,12 @@ public class Robot extends TimedRobot {
                         }
                         break;
                     case 1:
+                        victor.set(0.5);
                         autoState += drive.gyroStraight_ChangeSpeed(0.6, 0.8, 1000, 0, false);
                         break;
                     case 2:
                         if (length < 200) {
-                            Red_or_Blue = "red";
+                            RED_OR_BLUE = "red";
                             autoState = 0;
                             if (contourRect.x < 50) {
                                 autoSelected = PATH_B;
@@ -324,12 +317,7 @@ public class Robot extends TimedRobot {
                                 autoSelected = PATH_A;
                             }
                         } else {
-                            Red_or_Blue = "blue";
-                            if (contourRect.x < 50) {
-                                autoSelected = PATH_B;
-                            } else {
-                                autoSelected = PATH_A;
-                            }
+                            RED_OR_BLUE = "blue";
                             autoState += 1;
                         }
                         break;
@@ -337,83 +325,70 @@ public class Robot extends TimedRobot {
                         autoState += drive.gyroArcTurn(0.8, 0.75, 40, false);
                         break;
                     case 4:
-                        autoState += drive.gyroArcTurn_ChangeSpeed(0.8, 0.65, -0.75, 40, false);
+                        autoState += drive.gyroSmoothStraight(0.8,1,3500,40,false);
                         break;
                     case 5:
-                        autoState += drive.gyroStraight_ChangeSpeed(0.65, 0.5, 1000, 0, true);
+                        autoState += drive.gyroArcTurn_ChangeSpeed(0.8, 0.65, -0.75, 40, false);
                         break;
                     case 6:
-//                        if(contourRect != null){
-//                            autoState = 0;
-//                            if(contourRect.x + contourRect.width > 160){
-//                                autoSelected = PATH_B;
-//                            } else {
-//                                autoSelected = PATH_A;
-//                            }
-//                        } else {
-//                            System.out.println("Error");
-//                        }
-//                }
+                        autoState += drive.gyroStraight_ChangeSpeed(0.65, 0.5, 1000, 0, true);
+                        break;
+                    case 7:
+                        if(contourRect.x < 100){
+                            autoSelected = PATH_B;
+                        } else {
+                            autoSelected = PATH_A;
+                        }
+                        autoState = 0;
                         break;
                 }
                 break;
 
             case PATH_A:
-//                switch (pathA_State) {
-//                    case 0:
-//                        victor.set(0.5);
-//                        pathA_State += drive.gyroStraight_ChangeSpeed(0.7, 0.8, 7000, 0, false);
-//                        break;
-//                    case 1:
-//                        pathA_State += drive.gyroArcTurn(0.8, 0.8, 27, false);
-//                        break;
-//                    case 2:
-//                        if (length < 100) {
-//                            Red_or_Blue = "red";
-//                        } else {
-//                            Red_or_Blue = "blue";
-//                        }
-//                        System.out.println(Red_or_Blue);
-//                        pathA_State += 1;
-//                        break;
-//                }
-//                if (pathA_State >= 3 && Red_or_Blue == "red") {
-//                    switch (pathA_Red_State) {
-//                        case 0:
-//                            pathA_Red_State += drive.gyroStraight_ChangeSpeed(0.9, 0.5, 3200, 27, false);
-//                            break;
-//                        case 1:
-//                            pathA_Red_State += drive.gyroPivotTurn_ChangeSpeed('R', 0.8, 0.5, 90, false);
-//                            break;
-//                        case 2:
-//                            pathA_Red_State += drive.gyroSmoothStraight(0.7, 1, 7000, -63, false);
-//                            break;
-//                        case 3:
-//                            pathA_Red_State += drive.gyroArcTurn(0.8, 0.9, 63, false);
-//                            break;
-//                        case 4:
-//                            pathA_Red_State += drive.gyroSmoothStraight(0.7, 1, 15000, 15, true);
-//                            break;
-//                    }
-//                } else if (pathA_State >= 3 && Red_or_Blue == "blue") {
-//                    switch (pathA_Blue_State) {
-//                        case 0:
-//                            pathA_Blue_State += drive.gyroStraight_ChangeSpeed(0.9, 0.7, 7000, 40, false);
-//                            break;
-//                        case 1:
-//                            pathA_Blue_State += drive.gyroPivotTurn_ChangeSpeed('R', 0.8, 0.5, 100, false);
-//                            break;
-//                        case 2:
-//                            pathA_Blue_State += drive.gyroSmoothStraight(0.7, 1, 7000, -65, false);
-//                            break;
-//                        case 3:
-//                            pathA_Blue_State += drive.gyroPivotTurn_ChangeSpeed('L', 0.7, 0.55, 105, false);
-//                            break;
-//                        case 4:
-//                            pathA_Blue_State += drive.gyroSmoothStraight(0.7, 1, 13000, 40, true);
-//                            break;
-//                    }
-//                }
+                if(Objects.equals(RED_OR_BLUE,"red")){
+                    switch (autoState){
+                        case 0:
+                            autoState += drive.gyroStraight_ChangeSpeed(0.8,0.9,2000,0,false);
+                            break;
+                        case 1:
+                            autoState += drive.gyroArcTurn(0.9,0.8,20,false);
+                            break;
+                        case 2:
+                            autoState += drive.gyroArcTurn_ChangeSpeed(0.7,0.9,-1.1,120,false);
+                            break;
+                        case 3:
+                            autoState += drive.gyroArcTurn(0.9,1.5,180,false);
+                            break;
+                        case 4:
+                            autoState += drive.gyroStraight_ChangeSpeed(0.9,0.6,8000,60,true);
+                            break;
+                    }
+
+                } else if(Objects.equals(RED_OR_BLUE,"blue")){
+                    switch (autoState){
+                        case 0:
+                            break;
+                    }
+                }
+                break;
+
+            case PATH_B:
+                if(Objects.equals(RED_OR_BLUE,"red")){
+                    switch (autoState){
+                        case 0:
+                            autoState += drive.gyroSmoothArcTurn(0.6,0.8,-1.2,60,true);
+                            break;
+                        case 1:
+                            autoState += drive.gyroArcTurn(0.8,1.2,180,true);
+                            break;
+                    }
+
+                } else if(Objects.equals(RED_OR_BLUE,"blue")){
+                    switch (autoState){
+                        case 1:
+                            break;
+                    }
+                }
                 break;
 
             case TUNING:
@@ -549,11 +524,10 @@ public class Robot extends TimedRobot {
     }
 
     private double[] getDirection(double robot_angle,double target){
-        double error = ((robot_angle-target) % 360 + 360) % 360;
-        double data[] = new double[2];
+        double error = Math.floorMod((long)(robot_angle-target),360);
+        double[] data = new double[2];
         data[0] = error < 90 || error > 270 ? 1:-1;
         data[1] = (error+90) % 180 -90;
         return data;
     }
-
 }
