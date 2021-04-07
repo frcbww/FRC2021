@@ -442,11 +442,14 @@ public class Robot extends TimedRobot {
                 stickLR = 0.6 * Math.signum(stickLR);
             }
 
+            //LB: 反転モード
+            int sign = controller.getBumper(GenericHID.Hand.kLeft) ? -1 : 1;
+
             //RB: 低速モード切り替え
             double highSpeed = controller.getBumper(GenericHID.Hand.kRight) ? 0.6 : 0.8;
 
             //足回りモーター
-            double xSpeed = -highSpeed * convertStickSigmoid(stickLY);
+            double xSpeed = -sign * highSpeed * convertStickSigmoid(stickLY);
             double zRotation = convertStickSigmoid(stickLR);
 
             xSpeed *= controller.getTriggerAxis(GenericHID.Hand.kLeft) * 0.25 + 1;
@@ -459,14 +462,6 @@ public class Robot extends TimedRobot {
 
         } else if(Objects.equals(TELEOP_MODE, "Tank")){
             drive.tankDrive(-0.8*stickLY,-0.8*stickRY);
-
-        }
-
-        //LB: 回収機構
-        if (controller.getBumper(GenericHID.Hand.kLeft)) {
-            victor.set(0.5);
-        } else {
-            victor.stopMotor();
         }
 
 //        double targetAngle, progressAngle, error;
