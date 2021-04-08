@@ -36,7 +36,7 @@ public class Drive extends edu.wpi.first.wpilibj.drive.DifferentialDrive {
         encoderR = ec2;
         gyro = gy;
         gyroGain.setGyroGainApproximate(0.4, 0.04, 0.0005, 0.3, 0.6, 0.06, 0.001, 0.6);
-        arcGain.setGyroGainApproximate(0.55, 0.02, 0.0003, 0.3, 0.9, 0.03, 0.0012, 0.6);
+        arcGain.setGyroGainApproximate(0.55, 0.02, 0, 0.17, 0.7, 0.03, 0, 0.47);
         stickGain.setGyroGainApproximate(0.4, 0.012, 0, 0, 0.6, 0.018, 0, 0);
     }
 

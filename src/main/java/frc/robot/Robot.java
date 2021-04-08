@@ -305,7 +305,7 @@ public class Robot extends TimedRobot {
                         break;
                     case 1:
                         victor.set(0.5);
-                        autoState += drive.gyroStraight_ChangeSpeed(0.6, 0.8, 1000, 0, false);
+                        autoState += drive.gyroStraight_ChangeSpeed(0.6, 0.8, 600, 0, false);
                         break;
                     case 2:
                         if (length < 200) {
@@ -317,29 +317,29 @@ public class Robot extends TimedRobot {
                                 autoSelected = PATH_A;
                             }
                         } else {
-                            RED_OR_BLUE = "blue";
+//                            RED_OR_BLUE = "blue";
+//                            if(contourRect.x > 200){
+//                                autoSelected = PATH_A;
+//                            } else {
+//                                autoSelected = PATH_B;
+//                            }
+//                            autoState = 0;
                             autoState += 1;
                         }
                         break;
                     case 3:
-                        autoState += drive.gyroArcTurn(0.8, 0.75, 40, false);
+                        autoState += drive.gyroArcTurn(0.8, 0.9, 40, true);
                         break;
                     case 4:
-                        autoState += drive.gyroSmoothStraight(0.8,1,3500,40,false);
+//                        autoState += drive.gyroArcTurn_ChangeSpeed(0.8, 0.65, -0.9, 40, true);
                         break;
                     case 5:
-                        autoState += drive.gyroArcTurn_ChangeSpeed(0.8, 0.65, -0.75, 40, false);
-                        break;
-                    case 6:
-                        autoState += drive.gyroStraight_ChangeSpeed(0.65, 0.5, 1000, 0, true);
-                        break;
-                    case 7:
-                        if(contourRect.x < 100){
-                            autoSelected = PATH_B;
-                        } else {
-                            autoSelected = PATH_A;
-                        }
-                        autoState = 0;
+//                        if(contourRect.x < 100){
+//                            autoSelected = PATH_B;
+//                        } else {
+//                            autoSelected = PATH_A;
+//                        }
+//                        autoState = 0;
                         break;
                 }
                 break;
@@ -348,25 +348,29 @@ public class Robot extends TimedRobot {
                 if(Objects.equals(RED_OR_BLUE,"red")){
                     switch (autoState){
                         case 0:
-                            autoState += drive.gyroStraight_ChangeSpeed(0.8,0.9,2000,0,false);
+                            autoState += drive.gyroStraight_ChangeSpeed(0.8,0.9,2200,0,false);
                             break;
                         case 1:
                             autoState += drive.gyroArcTurn(0.9,0.8,20,false);
                             break;
                         case 2:
-                            autoState += drive.gyroArcTurn_ChangeSpeed(0.7,0.9,-1.1,120,false);
+                            autoState += drive.gyroArcTurn_ChangeSpeed(0.7,0.87,-1.1,110,false);
                             break;
                         case 3:
-                            autoState += drive.gyroArcTurn(0.9,1.5,180,false);
+                            autoState += drive.gyroArcTurn(0.9,1.5,110,false);
                             break;
                         case 4:
-                            autoState += drive.gyroStraight_ChangeSpeed(0.9,0.6,8000,60,true);
+                            autoState += drive.gyroStraight_ChangeSpeed(0.9,0.6,6000,20,true);
                             break;
                     }
 
                 } else if(Objects.equals(RED_OR_BLUE,"blue")){
                     switch (autoState){
                         case 0:
+//                            autoState += drive.gyroArcTurn(0.8,-0.9,90,false);
+//                            break;
+//                        case 1:
+//                            autoState += drive.gyroStraight(0.8,1000,-90,true);
                             break;
                     }
                 }
@@ -376,10 +380,13 @@ public class Robot extends TimedRobot {
                 if(Objects.equals(RED_OR_BLUE,"red")){
                     switch (autoState){
                         case 0:
-                            autoState += drive.gyroSmoothArcTurn(0.6,0.8,-1.2,60,true);
+                            autoState += drive.gyroSmoothArcTurn(0.6,0.8,-1.4,60,false);
                             break;
                         case 1:
-                            autoState += drive.gyroArcTurn(0.8,1.2,180,true);
+                            autoState += drive.gyroArcTurn(0.8,1.2,240,true);
+                            break;
+                        case 2:
+                            autoState += drive.gyroSmoothStraight(0.6,0.9,-9000,180,true);
                             break;
                     }
 
@@ -406,6 +413,7 @@ public class Robot extends TimedRobot {
         compressor_timer.reset();
         compressor_timer.start();
         TELEOP_MODE = "Arcade";
+        victor.set(0);
     }
 
     /**
