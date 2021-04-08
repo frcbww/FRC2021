@@ -454,7 +454,7 @@ public class Robot extends TimedRobot {
             int sign = controller.getBumper(GenericHID.Hand.kLeft) ? -1 : 1;
 
             //RB: 低速モード切り替え
-            double highSpeed = controller.getBumper(GenericHID.Hand.kRight) ? 0.6 : 0.8;
+            double highSpeed = controller.getBumper(GenericHID.Hand.kRight) ? 0.6 : 0.9;
 
             //足回りモーター
             double xSpeed = -sign * highSpeed * convertStickSigmoid(stickLY);
@@ -527,7 +527,7 @@ public class Robot extends TimedRobot {
     }
 
     private double[] getDirection(double robot_angle,double target){
-        double error = Math.floorMod((long)(robot_angle-target),360);
+        double error = ((robot_angle-target) % 360 + 360) % 360;
         double[] data = new double[2];
         data[0] = error < 90 || error > 270 ? 1:-1;
         data[1] = (error+90) % 180 -90;
